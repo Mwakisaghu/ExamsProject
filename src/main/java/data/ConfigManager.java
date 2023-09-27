@@ -73,6 +73,7 @@ public class ConfigManager {
             saveDocument();
 
             System.out.println(encryptedUsername + ": Encrypted Username");
+            System.out.println(secretKey + ": Secret key used for encryption");
         } else {
             // If already encrypted, just print it
 //            System.out.println("Username (Encrypted): " + usernameNode.getTextContent());
@@ -80,6 +81,7 @@ public class ConfigManager {
             // Decrypt
             String decryptedUsername = EncryptConfigsXml.decrypt(usernameNode.getTextContent(), secretKey, ivParameterSpec);
             System.out.println("decryptedUsername :" + decryptedUsername);
+            System.out.println(secretKey + ": Secret key used for decryption");
         }
     }
 
