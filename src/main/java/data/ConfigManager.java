@@ -20,8 +20,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class ConfigManager {
-    private static Document doc;
-    private static XPath xPath;
+    private Document doc;
+    private XPath xPath;
     private SecretKey secretKey;
     private IvParameterSpec ivParameterSpec;
 
@@ -33,103 +33,93 @@ public class ConfigManager {
         XPathFactory xPathfactory = XPathFactory.newInstance();
         xPath = xPathfactory.newXPath();
 
-        // Initialize secretKey and ivParameterSpec
-        secretKey = EncryptConfigsXml.generateSecretKey();
-        System.out.println("Secret Key generated on !st attempt :" + secretKey);
-        ivParameterSpec = EncryptConfigsXml.generateIvParameterSpec();
+        this.secretKey = EncryptConfigsXml.generateSecretKey();
+        this.ivParameterSpec = EncryptConfigsXml.generateIvParameterSpec();
     }
 
-    // Read config file elements
-    public static String getDriverClass() throws XPathExpressionException {
+    public String getDriverClass() throws XPathExpressionException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/DRIVER_CLASS");
         return expr.evaluate(doc);
     }
 
-    public static String getConnectionURL() throws XPathExpressionException {
+    public String getConnectionURL() throws XPathExpressionException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/CONNECTION_URL");
         return expr.evaluate(doc);
     }
 
-    public static String getUsername() throws XPathExpressionException {
-        XPathExpression expr = xPath.compile("/CONFIG/DB/USERNAME");
-        return expr.evaluate(doc);
+    public String getDatabaseName() throws XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException {
+        XPathExpression expr = xPath.compile("/CONFIG/DB/DATABASE_NAME");
+        Node databaseNameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
+
+        String decryptedDbName = null;
+        if (!isEncrypted((Element) databaseNameNode)) {
+            // If not encrypted, return the clear-text value
+            String encryptedDbName = EncryptConfigsXml.encrypt(databaseNameNode.getTextContent(), secretKey, ivParameterSpec);
+            databaseNameNode.setTextContent(encryptedDbName);
+            ((Element) databaseNameNode).setAttribute("TYPE", "ENCRYPTED");
+            saveDocument();
+
+            System.out.println(encryptedDbName + ": Updated and Encrypted Db Name");
+
+            decryptedDbName = EncryptConfigsXml.decrypt(encryptedDbName, secretKey, ivParameterSpec);
+            System.out.println(decryptedDbName + "--decrypted Db Name");
+        }
+        return decryptedDbName;
     }
 
-    public static String getPassword() throws XPathExpressionException {
-        XPathExpression expr = xPath.compile("/CONFIG/DB/PASSWORD");
-        return expr.evaluate(doc);
-    }
-
-    // Check and update the username
-    public void updateUsername(String newUsername) throws XPathExpressionException, TransformerException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public String getUsername() throws XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/USERNAME");
         Node usernameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
+        String decryptedUsername = null;
         if (!isEncrypted((Element) usernameNode)) {
-            // If not encrypted, encrypt it and set the attribute to "ENCRYPTED"
-            String encryptedUsername = EncryptConfigsXml.encrypt(getUsername(), secretKey, ivParameterSpec);
+            // If not encrypted => encrypt username => set the attribute to "ENCRYPTED"
+            String encryptedUsername = EncryptConfigsXml.encrypt(usernameNode.getTextContent(), secretKey, ivParameterSpec);
             usernameNode.setTextContent(encryptedUsername);
             ((Element) usernameNode).setAttribute("TYPE", "ENCRYPTED");
             saveDocument();
 
-            System.out.println(encryptedUsername + ": Encrypted Username");
-            System.out.println(secretKey + ": Secret key used for encryption");
-        } else {
-            // If already encrypted, just print it
-//            System.out.println("Username (Encrypted): " + usernameNode.getTextContent());
+            System.out.println(encryptedUsername + ": Updated and Encrypted Username");
 
-            // Decrypt
-            String decryptedUsername = EncryptConfigsXml.decrypt(usernameNode.getTextContent(), secretKey, ivParameterSpec);
-            System.out.println("decryptedUsername :" + decryptedUsername);
-            System.out.println(secretKey + ": Secret key used for decryption");
+            decryptedUsername = EncryptConfigsXml.decrypt(encryptedUsername, secretKey, ivParameterSpec);
+            System.out.println(decryptedUsername + "--decryptedUsername");
         }
+        return decryptedUsername;
     }
 
-    // Check and update the password
-    public void updatePassword(String newPassword) throws XPathExpressionException, TransformerException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public String getPassword() throws XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/PASSWORD");
         Node passwordNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
+        String decryptedPassword = null;
         if (!isEncrypted((Element) passwordNode)) {
-            // If not encrypted, encrypt it and set the attribute to "ENCRYPTED"
-            String encryptedPassword = EncryptConfigsXml.encrypt(getPassword(), secretKey, ivParameterSpec);
+            // If not encrypted => encrypt => set the attribute to "ENCRYPTED"
+            String encryptedPassword = EncryptConfigsXml.encrypt(passwordNode.getTextContent(), secretKey, ivParameterSpec);
             passwordNode.setTextContent(encryptedPassword);
             ((Element) passwordNode).setAttribute("TYPE", "ENCRYPTED");
             saveDocument();
 
-            System.out.println(encryptedPassword + ": Encrypted Password");
-            System.out.println(secretKey + "used for encryption");
-        } else {
-            // If already encrypted - just print it
-//            System.out.println("Username (Encrypted): " + passwordNode.getTextContent());
+            System.out.println(encryptedPassword + ": Updated and Encrypted Password");
 
-            // Decrypt the password
-            String decryptedPassword = EncryptConfigsXml.decrypt(passwordNode.getTextContent(), secretKey, ivParameterSpec);
-            System.out.println(secretKey + ": used for decryption");
-            System.out.println("Decrypted Password: " + decryptedPassword);
+            decryptedPassword = EncryptConfigsXml.decrypt(encryptedPassword, secretKey, ivParameterSpec);
+            System.out.println(decryptedPassword + "--decryptedPassword--");
+
         }
+        return decryptedPassword;
     }
 
-    // Save and update the document
-    private void saveDocument() throws TransformerException {
-        try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            DOMSource source = new DOMSource(doc);
-
-            // Specify the correct file path for saving the updated XML
-            StreamResult result = new StreamResult(new File("configs/config.xml"));
-            transformer.transform(source, result);
-            System.out.println("Success - Update!!");
-        } catch (TransformerException e) {
-            e.printStackTrace();
-            System.err.println("Update was not successful");
-        }
-    }
-
-    // Checking encryption status
+    // Checking for the Encryption Status
     private boolean isEncrypted(Element element) {
         String typeAttribute = element.getAttribute("TYPE");
         return "ENCRYPTED".equalsIgnoreCase(typeAttribute);
+    }
+
+    private void saveDocument() throws TransformerException {
+        // Writing the updated document back to the XML file
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File("configs/config.xml"));
+        transformer.transform(source, result);
     }
 }
