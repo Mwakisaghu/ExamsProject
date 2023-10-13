@@ -1,6 +1,8 @@
 package org.example;
 
 import data.ConfigManager;
+import io.undertow.Undertow;
+import io.undertow.server.HttpHandler;
 import org.xml.sax.SAXException;
 import queries.QueryRunner;
 
@@ -17,9 +19,18 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+import static java.lang.VersionProps.build;
+
 public class Main {
     public static void main(String[] args) {
         try {
+            // Build Undertow server
+            Undertow server = Undertow.builder()
+                    .addHttpListener(8080, "localhost")
+                    .setHandler( apiHandler())
+                    .build();
+            server.start();
+
             // Initialize the ConfigManager
             ConfigManager configManager = new ConfigManager();
 
