@@ -21,7 +21,7 @@ public class QueryRunner {
         ResultSet resultSet = null;
 
         try {
-            resultSet = queryManager.executeSelectQuery(selectQuery, paramMap);
+            resultSet = QueryManager.executeSelectQuery(selectQuery, paramMap);
             System.out.println("Results from selectQuery:");
             System.out.println("student_id || first_name || last_name || gender");
             System.out.println("............................................");
@@ -56,7 +56,7 @@ public class QueryRunner {
         ResultSet resultSet = null;
 
         try {
-            resultSet = queryManager.executeSelectQuery(sqlQuery, examsMap);
+            resultSet = QueryManager.executeSelectQuery(sqlQuery, examsMap);
             System.out.println("Results from examsQuery:");
             System.out.println("teachers_name || exam_id || exam_name");
             System.out.println("........................................");
@@ -99,7 +99,7 @@ public class QueryRunner {
         ResultSet resultSet = null;
 
         try {
-            resultSet = queryManager.executeSelectQuery(sqlQuery, answersMap);
+            resultSet = QueryManager.executeSelectQuery(sqlQuery, answersMap);
             System.out.println("Results from answersQuery:");
             System.out.println("student_name || answer_id || student_id || multiple_choice_text || percentage_score");
             System.out.println("..............................................................................");
@@ -145,7 +145,7 @@ public class QueryRunner {
         ResultSet resultSet = null;
 
         try {
-            resultSet = queryManager.executeSelectQuery(sqlQuery, rankingsMap);
+            resultSet = QueryManager.executeSelectQuery(sqlQuery, rankingsMap);
             System.out.println("Results from rankingsQuery:");
             System.out.println("student_name || exam_name || percentage_score");
             System.out.println("..............................................");
@@ -187,7 +187,7 @@ public class QueryRunner {
         ResultSet resultSet = null;
 
         try {
-            resultSet = queryManager.executeSelectQuery(sqlQuery, reportSheetMap);
+            resultSet = QueryManager.executeSelectQuery(sqlQuery, reportSheetMap);
             System.out.println("Results from reportSheetQuery:");
             System.out.println("student_id || student_name || exam_name || average_score");
             System.out.println(".........................................................");
@@ -227,7 +227,7 @@ public class QueryRunner {
         insertSqlMap.put(8, "aa@example90.com");
 
         try {
-            queryManager.executeInsertQuery(insertSql, insertSqlMap);
+            QueryManager.executeInsertQuery(insertSql, insertSqlMap);
             System.out.println("Student inserted successfully.");
         } catch (SQLException e) {
             System.err.println("Failed to insert student: " + e.getMessage());
@@ -240,7 +240,7 @@ public class QueryRunner {
         updateSqlMap.put(2, 37);
 
         try {
-            queryManager.executeUpdateQuery(updateSql, updateSqlMap);
+            QueryManager.executeUpdateQuery(updateSql, updateSqlMap);
             System.out.println("Student with studentId 37 has been successfully updated.");
         } catch (SQLException e) {
             System.err.println("Failed to update the student: " + e.getMessage());
@@ -252,7 +252,7 @@ public class QueryRunner {
         deleteSqlMap.put(1, 57);
 
         try {
-            int rowCount = queryManager.executeDeleteQuery(deleteSql, deleteSqlMap);
+            int rowCount = QueryManager.executeDeleteQuery(deleteSql, deleteSqlMap);
 
             if (rowCount > 0) {
                 System.out.println("Student with studentId 57 has been successfully deleted.");
