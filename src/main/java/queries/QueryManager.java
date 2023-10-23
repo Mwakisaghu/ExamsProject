@@ -7,17 +7,18 @@ import java.sql.SQLException;
 import java.util.Map;
 
 public class QueryManager {
-    private Connection connection;
+    private static Connection connection;
 
     public QueryManager(Connection connection) {
+
         this.connection = connection;
     }
 
-    // Method to execute a SELECT Query with params
-    public ResultSet executeSelectQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    // Method to execute a SELECT query with params
+    public static ResultSet executeSelectQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
-        // params for the prepared statement
+        // Set parameters for the prepared statement
         for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
             preparedStatement.setObject(entry.getKey(), entry.getValue());
         }
@@ -26,7 +27,7 @@ public class QueryManager {
     }
 
     // Method to execute an UPDATE query with params
-    public int executeUpdateQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeUpdateQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
@@ -38,7 +39,7 @@ public class QueryManager {
     }
 
     // Method to execute an INSERT query with params & return the generated keys
-    public ResultSet executeInsertQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeInsertQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, PreparedStatement.RETURN_GENERATED_KEYS);
 
         // Set parameters for the prepared statement
@@ -46,12 +47,13 @@ public class QueryManager {
             preparedStatement.setObject(entry.getKey(), entry.getValue());
         }
 
-        preparedStatement.executeUpdate();
-        return preparedStatement.getGeneratedKeys();
+        int rowCount = preparedStatement.executeUpdate();
+
+        return rowCount;
     }
 
     // Method to execute a DELETE query
-    public int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // params for the prepared statement
