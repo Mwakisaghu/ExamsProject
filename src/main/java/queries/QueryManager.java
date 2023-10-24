@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.Map;
 
 public class QueryManager {
-    private static Connection connection;
+    public static Connection connection;
 
     public QueryManager(Connection connection) {
         this.connection = connection;
