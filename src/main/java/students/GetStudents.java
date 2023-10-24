@@ -1,9 +1,9 @@
 package students;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import queries.QueryManager;
 
 import java.sql.Connection;
@@ -14,66 +14,58 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class GetStudents implements HttpHandler {
-    private Connection connection;
+    private final Connection connection;
 
-    public GetStudents (Connection connection) {
-
+    public GetStudents(Connection connection) {
         this.connection = connection;
     }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-        // Retrieving all students from the db
-        List<Map<String, Object>> studentsList = getAllStudents();
+        ResultSet resultSet = retrieveStudentsFromDatabase();
 
-        if (!studentsList.isEmpty()) {
-            // Creating a JSON array from the list of students
-            ObjectMapper objectMapper = new ObjectMapper();
-            String jsonRes = objectMapper.writeValueAsString(studentsList);
+        if (resultSet != null) {
+            // Converting the ResultSet into a JSON
+            String jsonResponse = convertResultSetToJson(resultSet);
 
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send(jsonRes);
+            exchange.getResponseSender().send(jsonResponse);
         } else {
-            exchange.setStatusCode(404);
+            // Internal server errors
+            exchange.setStatusCode(500);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send("Error: No students found");
+            exchange.getResponseSender().send("Error: Failed to retrieve student data from the database");
         }
     }
 
-    private List<Map<String, Object>> getAllStudents() {
-        List<Map<String, Object>> students = new ArrayList<>();
-
-        // SQL query to retrieve all students
+    private ResultSet retrieveStudentsFromDatabase() {
         String selectQuery = "SELECT * FROM students";
 
-        ResultSet resultSet = null;
         try {
-            resultSet = QueryManager.executeSelectQuery(selectQuery, new HashMap<>());
-
-            while (resultSet.next()) {
-                Map<String, Object> student = new HashMap<>();
-                student.put("student_id", resultSet.getString("student_id"));
-                student.put("first_name", resultSet.getString("first_name"));
-                student.put("last_name", resultSet.getString("last_name"));
-                student.put("class_tier_id", resultSet.getString("class_tier_id"));
-                student.put("date_of_birth", resultSet.getString("date_of_birth"));
-                student.put("gender", resultSet.getString("gender"));
-                student.put("email_address", resultSet.getString("email_address"));
-
-                students.add(student);
-            }
+            // QueryManager to execute the query
+            return QueryManager.executeSelectQuery(selectQuery, new HashMap<>());
         } catch (SQLException e) {
+            // Handle database query errors here
             e.printStackTrace();
-        } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            return null;
         }
-        return students;
+    }
+
+    private String convertResultSetToJson(ResultSet resultSet) throws SQLException, JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Map<String, Object>> students = new ArrayList<>();
+
+        while (resultSet.next()) {
+            Map<String, Object> studentData = new HashMap<>();
+            studentData.put("student_id", resultSet.getInt("student_id"));
+            studentData.put("first_name", resultSet.getString("first_name"));
+            studentData.put("last_name", resultSet.getString("last_name"));
+            studentData.put("gender", resultSet.getString("gender"));
+            students.add(studentData);
+        }
+        return objectMapper.writeValueAsString(students);
     }
 }
