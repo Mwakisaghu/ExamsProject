@@ -21,27 +21,32 @@ public class GetStudent implements HttpHandler {
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-        // Extracting the StudentId
-        String studentIdParam = exchange.getQueryParameters().get("studentId").getFirst();
+        //Parsing student info to extract the studentId
+        Map<String, Object> requestBodyMap = parseRequestBody(exchange);
 
-        if (studentIdParam == null) {
+        if (requestBodyMap == null || !requestBodyMap.containsKey("student_id")) {
             exchange.setStatusCode(400);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send(" Error : StudentId is not provided");
+            exchange.getResponseSender().send(" Error : StudentId is not provided || RequestBody was not found");
             return;
         }
+
+        // Extracting the StudentId
+        String studentId = (String) requestBodyMap.get("student_id");
 
         // Retrieving the student's data from the database
         String selectQuery = "SELECT * FROM students WHERE student_id = ?";
 
+        //
         Map<Integer, Object> selectMap = new HashMap<>();
-        selectMap.put(1, Integer.parseInt(studentIdParam)); // Convert to int
+        selectMap.put(1, studentId);
 
         ResultSet resultSet = null;
         try {
             resultSet = QueryManager.executeSelectQuery(selectQuery, selectMap);
 
             if (resultSet.next()) {
+                // Retrieving the student data from the result set
                 String studentIdResult = resultSet.getString("student_id");
                 String firstName = resultSet.getString("first_name");
                 String lastName = resultSet.getString("last_name");
@@ -57,9 +62,12 @@ public class GetStudent implements HttpHandler {
                 ObjectMapper objectMapper = new ObjectMapper();
                 String jsonRes = objectMapper.writeValueAsString(jsonResponse);
 
+                // OK
+                exchange.setStatusCode(200);
                 exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
                 exchange.getResponseSender().send(jsonRes);
             } else {
+                // Not Found
                 exchange.setStatusCode(404);
                 exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
                 exchange.getResponseSender().send("Error: Student not found");
@@ -67,6 +75,8 @@ public class GetStudent implements HttpHandler {
 
         } catch (SQLException e) {
             e.printStackTrace();
+
+            // Internal Server Error
             exchange.setStatusCode(500);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(" Error: Internal Server Error");
@@ -78,6 +88,17 @@ public class GetStudent implements HttpHandler {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private Map<String, Object> parseRequestBody(HttpServerExchange exchange) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            byte[] reqBodyBytes = exchange.getInputStream().readAllBytes();
+            return objectMapper.readValue(reqBodyBytes, Map.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
