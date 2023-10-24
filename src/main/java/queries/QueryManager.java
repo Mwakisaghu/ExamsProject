@@ -4,14 +4,14 @@ import java.sql.*;
 import java.util.Map;
 
 public class QueryManager {
-    private Connection connection;
+    private static Connection connection;
 
     public QueryManager(Connection connection) {
         this.connection = connection;
     }
 
     // Method to execute a SELECT Query with params
-    public ResultSet executeSelectQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static ResultSet executeSelectQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
@@ -23,7 +23,7 @@ public class QueryManager {
     }
 
     // Method to execute an UPDATE query with parameters
-    public int executeUpdateQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeUpdateQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
@@ -35,7 +35,7 @@ public class QueryManager {
     }
 
     // Method to execute an INSERT query with parameters and return the generated keys
-    public ResultSet executeInsertQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static ResultSet executeInsertQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS);
 
         // Set parameters for the prepared statement
@@ -48,7 +48,7 @@ public class QueryManager {
     }
 
     // Method to execute a DELETE query with parameters
-    public int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
