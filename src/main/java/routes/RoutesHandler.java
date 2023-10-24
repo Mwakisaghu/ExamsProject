@@ -1,22 +1,20 @@
 package routes;
 
 import io.undertow.server.RoutingHandler;
-import students.CreateStudent;
-import students.DeleteStudent;
-import students.GetStudent;
-import students.UpdateStudent;
+import students.*;
 
 import static queries.QueryManager.connection;
 
 public class RoutesHandler {
-    public static RoutingHandler create() {
+    public static RoutingHandler createRoutesHandler() {
         RoutingHandler routingHandler = new RoutingHandler();
 
         // Define routes and attach corresponding handlers
-        routingHandler.add("GET", "/students/get", new GetStudent(connection));
+        routingHandler.add("GET", "/students/get", new GetStudents(connection));
+        routingHandler.add("GET", "students/get/{studentId}", new GetStudent(connection));
         routingHandler.add("POST", "/students/create", new CreateStudent(connection));
-        routingHandler.add("PUT", "/students/update", new UpdateStudent(connection));
-        routingHandler.add("DELETE", "/students/delete", new DeleteStudent(connection));
+        routingHandler.add("PUT", "/students/update/{studentId}", new UpdateStudent(connection));
+        routingHandler.add("DELETE", "/students/delete/{studentId}", new DeleteStudent(connection));
 
         return routingHandler;
     }
