@@ -83,12 +83,12 @@ public class QueryManager {
     }
 
     // Method to execute a DELETE query with parameters
-    public static int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+    public static int executeDeleteQuery(String sqlQuery, Map<String, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
-        for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-            preparedStatement.setObject(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
+            preparedStatement.setObject(Integer.parseInt(entry.getKey()), entry.getValue());
         }
 
         return preparedStatement.executeUpdate();
