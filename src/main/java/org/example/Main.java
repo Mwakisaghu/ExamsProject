@@ -1,10 +1,8 @@
 package org.example;
 
-import data.ConfigManager;
 import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
 import org.xml.sax.SAXException;
-import queries.QueryRunner;
+import queries.QueryManager;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -16,57 +14,22 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 
-import static java.lang.VersionProps.build;
+import static path.PathHandler.createPathHandler;
 
 public class Main {
-    public static void main(String[] args) {
-        try {
-            // Build Undertow server
-            Undertow server = Undertow.builder()
-                    .addHttpListener(8080, "localhost")
-                    .setHandler( apiHandler())
-                    .build();
-            server.start();
+    public static void main(String[] args) throws InvalidAlgorithmParameterException, XPathExpressionException, NoSuchPaddingException, IllegalBlockSizeException, ParserConfigurationException, IOException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException, SAXException {
 
-            // Initialize the ConfigManager
-            ConfigManager configManager = new ConfigManager();
+        // Initialising the query manager class
+        QueryManager queryManager = new QueryManager();
 
-            // Reading the database connection details from the XML configs
-            String driverClass = configManager.getDriverClass();
-            String connectionUrl = configManager.getConnectionURL();
-            String dbName = configManager.getDatabaseName();
-            String decryptedUsername = configManager.getUsername();
-            String decryptedPassword = configManager.getPassword();
+        // Creating an Undertow server and set the root handler
+        Undertow server = Undertow.builder()
+                .addHttpListener(7080, "localhost")
+                .setHandler(createPathHandler(QueryManager.getConnection()))
+                .build();
 
-
-            // Load the database driver class
-            Class.forName(driverClass);
-
-            try (Connection connection = DriverManager.getConnection(connectionUrl, decryptedUsername, decryptedPassword)) {
-
-                QueryRunner queryRunner = new QueryRunner(connection);
-
-                // Run your queries here using QueryRunner methods
-                QueryRunner.selectQuery();
-                QueryRunner.examsQuery();
-                QueryRunner.answersQuery();
-                QueryRunner.rankingsQuery();
-                QueryRunner.reportSheetQuery();
-                QueryRunner.insertQuery();
-                QueryRunner.updateQuery();
-                QueryRunner.deleteQuery();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException | XPathExpressionException | IllegalBlockSizeException |
-                 NoSuchPaddingException | ParserConfigurationException | IOException | NoSuchAlgorithmException |
-                 BadPaddingException | InvalidKeyException | TransformerException | SAXException e) {
-            throw new RuntimeException(e);
-        }
+        server.start();
     }
 }
+
