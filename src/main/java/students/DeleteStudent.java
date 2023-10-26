@@ -12,12 +12,6 @@ import java.util.Map;
 import java.sql.SQLException;
 
 public class DeleteStudent implements HttpHandler {
-    private final Connection connection;
-
-    public DeleteStudent(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         // Extracting the student ID from the request

@@ -13,12 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GetStudent implements HttpHandler {
-    private Connection connection;
-
-    public GetStudent(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         //Parsing student info to extract the studentId

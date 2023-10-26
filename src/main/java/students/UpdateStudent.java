@@ -12,13 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UpdateStudent implements HttpHandler {
-    private final Connection connection;
-
-    public UpdateStudent(Connection connection) {
-
-        this.connection = connection;
-    }
-
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         // Extracting the student info

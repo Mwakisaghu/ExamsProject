@@ -17,12 +17,6 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GetStudents implements HttpHandler {
-    private final Connection connection;
-
-    public GetStudents(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         ResultSet resultSet = retrieveStudentsFromDatabase();

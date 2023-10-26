@@ -14,12 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CreateStudent implements HttpHandler {
-    private final Connection connection;
-
-    public CreateStudent(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         // Extract student information from the request body
@@ -48,6 +42,18 @@ public class CreateStudent implements HttpHandler {
         insertMap.put(6, requestBodyMap.get("date_of_birth"));
         insertMap.put(7, requestBodyMap.get("gender"));
         insertMap.put(8, requestBodyMap.get("email_address"));
+
+
+        // Using Insert Map
+        /*Map<Integer, Object> insertMap = new HashMap<>();
+        insertMap.put(1, "student_id");
+        insertMap.put(2, "first_name");
+        insertMap.put(3, "middle_name");
+        insertMap.put(4, "last_name");
+        insertMap.put(5, "class_tier_id");
+        insertMap.put(6, "date_of_birth");
+        insertMap.put(6, "date_of_birth");*/
+
 
         try {
             // Executing the insert query & getting the generated keys and row count
