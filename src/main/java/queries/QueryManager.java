@@ -1,13 +1,48 @@
 package queries;
 
+import data.ConfigManager;
+import org.xml.sax.SAXException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.Map;
 
 public class QueryManager {
     public static Connection connection;
 
-    public QueryManager(Connection connection) {
-        this.connection = connection;
+    public QueryManager() throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException, XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, TransformerException {
+
+        // Initialise
+        ConfigManager configManager = new ConfigManager();
+
+        // Retrieve
+        String driverClass = configManager.getDriverClass();
+        String connectionUrl = configManager.getConnectionURL();
+        String username = configManager.getUsername();
+        String password = configManager.getPassword();
+
+            try {
+                // Load driver
+                Class.forName(driverClass);
+
+                // Establishing connection
+                connection = DriverManager.getConnection(connectionUrl, username, password);
+            } catch (SQLException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+    }
+
+    public static Connection getConnection() {
+        return connection;
     }
 
     // Method to execute a SELECT Query with params
