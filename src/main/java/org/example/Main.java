@@ -1,35 +1,43 @@
 package org.example;
 
+import io.undertow.Handlers;
 import io.undertow.Undertow;
-import org.xml.sax.SAXException;
+import io.undertow.UndertowOptions;
+import io.undertow.server.handlers.PathHandler;
 import queries.QueryManager;
+import routes.RoutesHandler;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import static path.PathHandler.createPathHandler;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
-    public static void main(String[] args) throws InvalidAlgorithmParameterException, XPathExpressionException, NoSuchPaddingException, IllegalBlockSizeException, ParserConfigurationException, IOException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException, SAXException {
+    public static void main(String[] args) {
+        System.out.println("Starting REST API");
 
-        // Initialising the query manager class
-        QueryManager queryManager = new QueryManager();
+        try {
+            QueryManager queryManager = new QueryManager();
 
-        // Creating an Undertow server and set the root handler
-        Undertow server = Undertow.builder()
-                .addHttpListener(7080, "localhost")
-                .setHandler(createPathHandler(QueryManager.getConnection()))
-                .build();
+            String strHost = "localhost";
+            int intPort = 7080;
+            String BASE_URL = "/api";
 
-        server.start();
+            PathHandler pathHandler = Handlers.path()
+                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.configureRoutes(QueryManager.getConnection()));
+
+
+            Undertow server = Undertow.builder()
+                    .setServerOption(UndertowOptions.DECODE_URL, true)
+                    .setServerOption(UndertowOptions.URL_CHARSET, StandardCharsets.UTF_8.name())
+                    .setServerOption(UndertowOptions.ENABLE_HTTP2, true)
+                    .addHttpListener(intPort, strHost)
+                    .setHandler(pathHandler)
+                    .build();
+
+            server.start();
+
+            System.out.println("Server Started at " + strHost + ":" + intPort);
+        } catch (Exception e) {
+            System.err.println("Failed to Start REST API");
+            e.printStackTrace();
+        }
     }
 }
-
