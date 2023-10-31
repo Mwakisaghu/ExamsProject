@@ -17,7 +17,7 @@ public class RestUtils {
         PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
         StringBuilder builder = new StringBuilder();
 
-        if(pathMatch.getParameters().get(pathVarId)==null){
+        if(pathMatch.getParameters().get(pathVarId)==null){/*HashMap<String, Object> existingUserMap = DatabaseHandler.allUsersList().get(Integer.parseInt(strUserId));*/
             return null;
         }
 
