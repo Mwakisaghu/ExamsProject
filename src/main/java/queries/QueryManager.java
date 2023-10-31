@@ -18,7 +18,6 @@ import java.util.Map;
 
 public class QueryManager {
     public static Connection connection;
-
     public QueryManager() throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException, XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, TransformerException {
 
         // Initialise
@@ -30,15 +29,15 @@ public class QueryManager {
         String username = configManager.getUsername();
         String password = configManager.getPassword();
 
-            try {
-                // Load driver
-                Class.forName(driverClass);
+        try {
+            // Load driver
+            Class.forName(driverClass);
 
-                // Establishing connection
-                connection = DriverManager.getConnection(connectionUrl, username, password);
-            } catch (SQLException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            // Establishing connection
+            connection = DriverManager.getConnection(connectionUrl, username, password);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Connection getConnection() {
@@ -63,7 +62,7 @@ public class QueryManager {
 
         // Set parameters for the prepared statement
         for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-            preparedStatement.setObject(entry.getKey(), entry.getValue());
+            preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
         }
 
         return preparedStatement.executeUpdate();
@@ -75,7 +74,7 @@ public class QueryManager {
 
         // Set parameters for the prepared statement
         for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-            preparedStatement.setObject(entry.getKey(), entry.getValue());
+            preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
         }
 
         preparedStatement.executeUpdate();
@@ -83,12 +82,12 @@ public class QueryManager {
     }
 
     // Method to execute a DELETE query with parameters
-    public static int executeDeleteQuery(String sqlQuery, Map<String, Object> paramMap) throws SQLException {
+    public static int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 
         // Set parameters for the prepared statement
-        for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
-            preparedStatement.setObject(Integer.parseInt(entry.getKey()), entry.getValue());
+        for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
+            preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
         }
 
         return preparedStatement.executeUpdate();
