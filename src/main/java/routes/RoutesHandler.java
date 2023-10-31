@@ -1,16 +1,20 @@
 package routes;
 
-import io.undertow.server.HttpHandler;
+import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
+import io.undertow.server.handlers.BlockingHandler;
+import rest.Dispatcher;
 import students.*;
 
+import java.sql.Connection;
+
 public class RoutesHandler {
-    public static HttpHandler createRoutingHandler() {
-        return new RoutingHandler()
-                .get("/students", new GetStudents())
-                .post("/students/create", new CreateStudent())
-                .get("/students/{studentId}", new GetStudent())
-                .put("/students/update", new UpdateStudent())
-                .delete("/students/delete", new DeleteStudent());
+    public static RoutingHandler configureRoutes(Connection connection) {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetStudents()))
+                .get("/{studentId}", new Dispatcher(new GetStudent()))
+                .post("/", new BlockingHandler(new CreateStudent()))
+                .put("/{studentId}", new BlockingHandler(new UpdateStudent()))
+                .delete("/{studentId}", new Dispatcher(new DeleteStudent()));
     }
 }
