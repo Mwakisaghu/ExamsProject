@@ -4,6 +4,7 @@ import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
 import rest.Dispatcher;
+import rest.InvalidMethod;
 import students.*;
 
 import java.sql.Connection;
@@ -15,6 +16,7 @@ public class RoutesHandler {
                 .get("/{studentId}", new Dispatcher(new GetStudent()))
                 .post("/", new BlockingHandler(new CreateStudent()))
                 .put("/{studentId}", new BlockingHandler(new UpdateStudent()))
-                .delete("/{studentId}", new Dispatcher(new DeleteStudent()));
+                .delete("/{studentId}", new Dispatcher(new DeleteStudent()))
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()));
     }
 }
