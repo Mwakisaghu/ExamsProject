@@ -1,64 +1,97 @@
 package students;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
+import io.undertow.util.StatusCodes;
 import queries.QueryManager;
+import rest.RestUtils;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class UpdateStudent implements HttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-        // Extracting the student info
-        Map<String, Object> requestBodyMap = parseReqBody(exchange);
+        // Extract the "student_id" path variable using RestUtils
+        String strStudentId = RestUtils.getPathVar(exchange, "studentId");
+        String reqBody = RestUtils.getRequestBody(exchange);
 
-        //Check for the request body
-        if (requestBodyMap == null) {
-            exchange.setStatusCode(400);
+        // Checking if strStudentId is a valid integer
+        if (!isInteger(strStudentId)) {
+            // Handle the case where an invalid student_id is provided
+            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send("Error : Invalid request - RequestBody Map not found");
+            exchange.getResponseSender().send("Error: Invalid student_id. The provided student_id must be a valid integer.");
+            return;
         }
 
-        // Extracting the studentId from the request body
-        assert requestBodyMap != null;
-        String studentId = (String) requestBodyMap.get("student_id");
-
-        // Preparing the Sql statement
-        String updateSql = "UPDATE students SET date_of_birth = ? WHERE student_id = ?";
-
-        Map<Integer, Object> updateMap = new HashMap<>();
-        updateMap.put(1, requestBodyMap.get("date_of_birth"));
-        updateMap.put(2, studentId);
-
         try {
-            QueryManager.executeUpdateQuery(updateSql, updateMap);
+            // Parsing the "student_id" as an integer
+            assert strStudentId != null;
+            int studentId = Integer.parseInt(strStudentId);
 
-                // success response - 200
-                exchange.setStatusCode(200);
-                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                exchange.getResponseSender().send("Success: Student info updated successfully");
-            } catch (SQLException e) {
-                e.printStackTrace();
+            // Parsing the request body as JSON
+            Gson gson = new Gson();
+            HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
-                // if student with the provided ID not found
-                exchange.setStatusCode(404);
+            // Checking for the request body
+            if (requestBodyMap == null) {
+                exchange.setStatusCode(StatusCodes.BAD_REQUEST);
                 exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                exchange.getResponseSender().send("Error: Student not found");
+                exchange.getResponseSender().send("Error: Invalid request - RequestBody Map not found");
+            } else {
+                // Preparing the SQL update statement
+                String updateSql = "UPDATE students SET date_of_birth = ? WHERE student_id = ?";
+
+                // Creating a parameter map for the query
+                Map<Integer, Object> updateMap = new HashMap<>();
+
+                updateMap.put(1, requestBodyMap.get("date_of_birth"));
+                updateMap.put(2, studentId);
+
+                try {
+                    // Executing the SQL update using the QueryManager
+                    int affectedRows = QueryManager.executeUpdateQuery(updateSql, updateMap);
+
+                    // Checking the number of affected rows to determine success
+                    if (affectedRows > 0) {
+                        // Success response
+                        exchange.setStatusCode(StatusCodes.OK);
+                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                        exchange.getResponseSender().send("Success: Updated " + affectedRows + " rows");
+                    } else {
+                        // Student with the provided ID not found
+                        exchange.setStatusCode(StatusCodes.NOT_FOUND);
+                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                        exchange.getResponseSender().send("Error: Student not found");
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    // Handle database errors
+                    exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
+                    exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                    exchange.getResponseSender().send("Error: Internal Server Error");
+                }
             }
+        } catch (NumberFormatException e) {
+            // Handle the case where an invalid student_id is provided
+            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
+            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+            exchange.getResponseSender().send("Error: Invalid student_id. Please provide a valid integer.");
+        }
     }
-    private Map<String, Object> parseReqBody(HttpServerExchange exchange) {
+
+    // utility method - checking if a string is a valid integer
+    private boolean isInteger(String str) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            byte[] reqBodyBytes = exchange.getInputStream().readAllBytes();
-            return objectMapper.readValue(reqBodyBytes, Map.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 }

@@ -6,7 +6,6 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import queries.QueryManager;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
