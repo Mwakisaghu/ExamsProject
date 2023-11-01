@@ -90,7 +90,7 @@ public class QueryManager {
             preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
         }
 
-        return preparedStatement.executeUpdate();
+        return preparedStatement.executeUpdate(); 
     }
 
     // Close the connection
