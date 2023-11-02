@@ -9,6 +9,7 @@ import rest.Dispatcher;
 import rest.FallBack;
 import rest.InvalidMethod;
 import students.*;
+import teachers.CreateTeacher;
 import teachers.GetTeacher;
 import teachers.GetTeachers;
 
@@ -32,6 +33,7 @@ public class RoutesHandler {
         return  Handlers.routing()
                 .get("/", new Dispatcher(new GetTeachers()))
                 .get("/{teacherId}", new Dispatcher(new GetTeacher()))
+                .post("/", new BlockingHandler(new CreateTeacher()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
