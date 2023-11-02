@@ -9,9 +9,7 @@ import rest.Dispatcher;
 import rest.FallBack;
 import rest.InvalidMethod;
 import students.*;
-import teachers.CreateTeacher;
-import teachers.GetTeacher;
-import teachers.GetTeachers;
+import teachers.*;
 
 import java.sql.Connection;
 
@@ -34,6 +32,8 @@ public class RoutesHandler {
                 .get("/", new Dispatcher(new GetTeachers()))
                 .get("/{teacherId}", new Dispatcher(new GetTeacher()))
                 .post("/", new BlockingHandler(new CreateTeacher()))
+                .put("/{teacherId}", new BlockingHandler(new UpdateTeacher()))
+                .delete("/{teacherId}", new Dispatcher(new DeleteTeacher()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
