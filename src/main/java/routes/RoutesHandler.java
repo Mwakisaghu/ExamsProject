@@ -9,12 +9,13 @@ import rest.Dispatcher;
 import rest.FallBack;
 import rest.InvalidMethod;
 import students.*;
+import teachers.GetTeacher;
 import teachers.GetTeachers;
 
 import java.sql.Connection;
 
 public class RoutesHandler {
-    public static RoutingHandler configureRoutes(Connection connection) {
+    public static RoutingHandler students (Connection connection) {
         return Handlers.routing()
                 // Students
                 .get("/", new Dispatcher(new GetStudents()))
@@ -22,9 +23,15 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateStudent()))
                 .put("/{studentId}", new BlockingHandler(new UpdateStudent()))
                 .delete("/{studentId}", new Dispatcher(new DeleteStudent()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
 
-                // Teachers
+    public static RoutingHandler teachers (Connection connection) {
+        return  Handlers.routing()
                 .get("/", new Dispatcher(new GetTeachers()))
+                .get("/{teacherId}", new Dispatcher(new GetTeacher()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
