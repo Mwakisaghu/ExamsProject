@@ -21,7 +21,8 @@ public class Main {
             String BASE_URL = "/api";
 
             PathHandler pathHandler = Handlers.path()
-                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.configureRoutes(QueryManager.getConnection()));
+                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.configureRoutes(QueryManager.getConnection()))
+                    .addPrefixPath(BASE_URL + "/teachers", RoutesHandler.configureRoutes(QueryManager.getConnection()));
 
 
             Undertow server = Undertow.builder()
