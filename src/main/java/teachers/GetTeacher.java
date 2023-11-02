@@ -25,7 +25,7 @@ public class GetTeacher implements HttpHandler {
             int teacherId = Integer.parseInt(strTeacherId);
 
             // SQL query to retrieve teachers data by teacherId
-            String selectQuery = "SELECT * FROM students WHERE teacher_id = ?";
+            String selectQuery = "SELECT * FROM teachers WHERE teacher_id = ?";
 
             // Creating a parameter map for the query
             Map<Integer, Object> paramMap = new HashMap<>();
@@ -35,7 +35,7 @@ public class GetTeacher implements HttpHandler {
             ResultSet resultSet = QueryManager.executeSelectQuery(selectQuery, paramMap);
 
             if (resultSet.next()) {
-                // Extracting student data from the result set
+                // Extracting teacher data from the result set
                 int teacherIdResult = resultSet.getInt("teacher_id");
                 String tscNumber = resultSet.getString("tsc_number");
                 String firstName = resultSet.getString("first_name");
