@@ -53,7 +53,7 @@ public class GetTeachers implements HttpHandler {
 
         while (resultSet.next()) {
             Map<String, Object> teacherData = new HashMap<>();
-            teacherData.put("teacher_id", resultSet.getInt("student_id"));
+            teacherData.put("teacher_id", resultSet.getInt("teacher_id"));
             teacherData.put("tsc_number", resultSet.getInt("tsc_number"));
             teacherData.put("first_name", resultSet.getString("first_name"));
             teacherData.put("last_name", resultSet.getString("last_name"));
