@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static queries.QueryManager.connection;
 
 public class UpdateStudent implements HttpHandler {
     @Override
@@ -23,9 +24,7 @@ public class UpdateStudent implements HttpHandler {
         // Checking if strStudentId is a valid integer
         if (!isInteger(strStudentId)) {
             // Handle the case where an invalid student_id is provided
-            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send("Error: Invalid student_id. The provided student_id must be a valid integer.");
+            sendErrorResponse(exchange, "Error: Invalid student_id. The provided student_id must be a valid integer.");
             return;
         }
 
@@ -40,52 +39,66 @@ public class UpdateStudent implements HttpHandler {
 
             // Checking for the request body
             if (requestBodyMap == null) {
-                exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                exchange.getResponseSender().send("Error: Invalid request - RequestBody Map not found");
+                sendErrorResponse(exchange, "Error: Invalid request - RequestBody Map not found");
             } else {
-                // Preparing the SQL update statement
-                String updateSql = "UPDATE students SET date_of_birth = ? WHERE student_id = ?";
-
-                // Creating a parameter map for the query
+                // Build the SQL update statement based on the fields in the request body
+                StringBuilder updateSqlBuilder = new StringBuilder("UPDATE teachers SET");
                 Map<Integer, Object> updateMap = new HashMap<>();
+                int paramIndex = 1;
 
-                updateMap.put(1, requestBodyMap.get("date_of_birth"));
-                updateMap.put(2, studentId);
-
-                try {
-                    // Executing the SQL update using the QueryManager
-                    int affectedRows = QueryManager.executeUpdateQuery(updateSql, updateMap);
-
-                    // Checking the number of affected rows to determine success
-                    if (affectedRows > 0) {
-                        // Success response
-                        exchange.setStatusCode(StatusCodes.OK);
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                        exchange.getResponseSender().send("Success: Updated " + affectedRows + " rows");
-                    } else {
-                        // Student with the provided ID not found
-                        exchange.setStatusCode(StatusCodes.NOT_FOUND);
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                        exchange.getResponseSender().send("Error: Student not found");
+                for (String key : requestBodyMap.keySet()) {
+                    if (paramIndex > 1) {
+                        updateSqlBuilder.append(",");
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    // Handle database errors
-                    exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
-                    exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                    exchange.getResponseSender().send("Error: Internal Server Error");
+                    updateSqlBuilder.append(" ").append(key).append(" = ?");
+                    updateMap.put(paramIndex, requestBodyMap.get(key));
+                    paramIndex++;
+                }
+                updateSqlBuilder.append(" WHERE student_id = ?");
+                updateMap.put(paramIndex, studentId);
+
+                // Execute the SQL update using the QueryManager
+                int affectedRows = QueryManager.executeUpdateQuery(updateSqlBuilder.toString(), updateMap).size();
+
+                // Checking the number of affected rows to determine success
+                if (affectedRows > 0) {
+                    // Success response
+                    sendSuccessResponse(exchange, "Success: Updated " + affectedRows + " rows");
+                } else {
+                    // The student with the provided ID not found
+                    sendErrorResponse(exchange, "Error: Student not found");
                 }
             }
         } catch (NumberFormatException e) {
-            // Handle the case where an invalid student_id is provided
-            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send("Error: Invalid student_id. Please provide a valid integer.");
+            // Handles the case where an invalid student_id is provided
+            sendErrorResponse(exchange, "Error: Invalid student_id. Please provide a valid integer.");
+        }
+        finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
-    // utility method - checking if a string is a valid integer
+    // Utility method - send a success response
+    private void sendSuccessResponse(HttpServerExchange exchange, String message) {
+        exchange.setStatusCode(StatusCodes.OK);
+        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+        exchange.getResponseSender().send(message);
+    }
+
+    // Utility method - send an error response
+    private void sendErrorResponse(HttpServerExchange exchange, String errorMessage) {
+        exchange.setStatusCode(StatusCodes.BAD_REQUEST);
+        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+        exchange.getResponseSender().send(errorMessage);
+    }
+
+    // Utility method - checking if a string is a valid integer
     private boolean isInteger(String str) {
         try {
             Integer.parseInt(str);
