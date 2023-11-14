@@ -1,6 +1,10 @@
 package teachers;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
@@ -8,10 +12,15 @@ import io.undertow.util.StatusCodes;
 import queries.QueryManager;
 import rest.RestUtils;
 
-import java.sql.ResultSet;
+import java.lang.reflect.Type;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static queries.QueryManager.connection;
 
 public class GetTeacher implements HttpHandler {
     @Override
@@ -28,32 +37,19 @@ public class GetTeacher implements HttpHandler {
             String selectQuery = "SELECT * FROM teachers WHERE teacher_id = ?";
 
             // Creating a parameter map for the query
-            Map<Integer, Object> paramMap = new HashMap<>();
+            HashMap<Integer, Object> paramMap = new LinkedHashMap<>();
             paramMap.put(1, teacherId);
 
             // Executing the SQL query using the QueryManager
-            ResultSet resultSet = QueryManager.executeSelectQuery(selectQuery, paramMap);
+            List<LinkedHashMap<String, Object>> result = QueryManager.executeSelectQuery(selectQuery, paramMap);
 
-            if (resultSet.next()) {
-                // Extracting teacher data from the result set
-                int teacherIdResult = resultSet.getInt("teacher_id");
-                String tscNumber = resultSet.getString("tsc_number");
-                String firstName = resultSet.getString("first_name");
-                String lastName = resultSet.getString("last_name");
-                String gender = resultSet.getString("gender");
-                String title = resultSet.getString("title");
+            if (!result.isEmpty()) {
+                // The query result is a list of rows, and each row is a LinkedHashMap
+                LinkedHashMap<String, Object> teacherData = result.get(0);
 
                 // Creating a JSON response
-                Gson gson = new Gson();
-                Map<String, Object> jsonResponse = new HashMap<>();
-                jsonResponse.put("teacher_id", teacherIdResult);
-                jsonResponse.put("tsc_number", tscNumber);
-                jsonResponse.put("first_name", firstName);
-                jsonResponse.put("last_name", lastName);
-                jsonResponse.put("gender", gender);
-                jsonResponse.put("title", title);
-
-                String strJsonResponse = gson.toJson(jsonResponse);
+                Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+                String strJsonResponse = gson.toJson(teacherData);
 
                 // Setting the HTTP response status code to 200 (OK)
                 exchange.setStatusCode(StatusCodes.OK);
@@ -74,12 +70,27 @@ public class GetTeacher implements HttpHandler {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send("Error: Invalid teacherId");
-        } catch (SQLException e) {
-            // Handle database errors
+        } catch (Exception e) {
+            // Handle other errors
             e.printStackTrace();
             exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send("Error: Internal Server Error");
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime> {
+        @Override
+        public JsonElement serialize(LocalDateTime localDateTime, Type srcType, JsonSerializationContext context) {
+            return context.serialize(localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
     }
 }
