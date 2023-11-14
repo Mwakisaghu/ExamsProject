@@ -1,10 +1,10 @@
 package org.example;
 
+import data.ConfigManager;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
 import io.undertow.server.handlers.PathHandler;
-import queries.QueryManager;
 import routes.RoutesHandler;
 
 import java.nio.charset.StandardCharsets;
@@ -14,15 +14,16 @@ public class Main {
         System.out.println("Starting REST API");
 
         try {
-            QueryManager queryManager = new QueryManager();
+            ConfigManager configManager = new ConfigManager();
 
-            String strHost = "localhost";
-            int intPort = 7080;
-            String BASE_URL = "/api";
+            String strHost = configManager.getUndertowHost();
+            int intPort = Integer.parseInt(configManager.getUndertowPort());
+            String BASE_URL = configManager.getBasePathUrl();
 
             PathHandler pathHandler = Handlers.path()
-                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.students(QueryManager.getConnection()))
-                    .addPrefixPath(BASE_URL + "/teachers", RoutesHandler.teachers(QueryManager.getConnection()));
+                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.students())
+                    .addPrefixPath(BASE_URL + "/teachers", RoutesHandler.teachers())
+                    .addPrefixPath(BASE_URL + "/subjects", RoutesHandler.subjects());
 
 
             Undertow server = Undertow.builder()

@@ -47,12 +47,27 @@ public class ConfigManager {
         return expr.evaluate(doc);
     }
 
+    public String getUndertowHost() throws XPathExpressionException {
+        XPathExpression expr = xPath.compile("/CONFIG/SERVER/UNDERTOW_HOST");
+        return expr.evaluate(doc);
+    }
+
+    public String getUndertowPort() throws XPathExpressionException {
+        XPathExpression expr = xPath.compile("/CONFIG/SERVER/UNDERTOW_PORT");
+        return expr.evaluate(doc);
+    }
+
+    public String getBasePathUrl() throws XPathExpressionException {
+        XPathExpression expr = xPath.compile("/CONFIG/API/BASE_PATH");
+        return expr.evaluate(doc);
+    }
+
     public String getDatabaseName() throws XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/DATABASE_NAME");
         Node databaseNameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedDbName = null;
-        if (!isEncrypted((Element) databaseNameNode)) {
+        if (isEncrypted((Element) databaseNameNode)) {
             // If not encrypted, return the clear-text value
             String encryptedDbName = EncryptConfigsXml.encrypt(databaseNameNode.getTextContent(), secretKey, ivParameterSpec);
             databaseNameNode.setTextContent(encryptedDbName);
@@ -72,8 +87,8 @@ public class ConfigManager {
         Node usernameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedUsername = null;
-        if (!isEncrypted((Element) usernameNode)) {
-            // If not encrypted => encrypt username => set the attribute to "ENCRYPTED"
+        if (isEncrypted((Element) usernameNode)) {
+            // If not encrypted => encrypt => set the attribute to "ENCRYPTED"
             String encryptedUsername = EncryptConfigsXml.encrypt(usernameNode.getTextContent(), secretKey, ivParameterSpec);
             usernameNode.setTextContent(encryptedUsername);
             ((Element) usernameNode).setAttribute("TYPE", "ENCRYPTED");
@@ -82,7 +97,8 @@ public class ConfigManager {
             System.out.println(encryptedUsername + ": Updated and Encrypted Username");
 
             decryptedUsername = EncryptConfigsXml.decrypt(encryptedUsername, secretKey, ivParameterSpec);
-            System.out.println(decryptedUsername + "--decryptedUsername");
+            System.out.println(decryptedUsername + "--decryptedUsername--");
+
         }
         return decryptedUsername;
     }
@@ -92,7 +108,7 @@ public class ConfigManager {
         Node passwordNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedPassword = null;
-        if (!isEncrypted((Element) passwordNode)) {
+        if (isEncrypted((Element) passwordNode)) {
             // If not encrypted => encrypt => set the attribute to "ENCRYPTED"
             String encryptedPassword = EncryptConfigsXml.encrypt(passwordNode.getTextContent(), secretKey, ivParameterSpec);
             passwordNode.setTextContent(encryptedPassword);
@@ -111,7 +127,7 @@ public class ConfigManager {
     // Checking for the Encryption Status
     private boolean isEncrypted(Element element) {
         String typeAttribute = element.getAttribute("TYPE");
-        return "ENCRYPTED".equalsIgnoreCase(typeAttribute);
+        return !"ENCRYPTED".equalsIgnoreCase(typeAttribute);
     }
 
     private void saveDocument() throws TransformerException {

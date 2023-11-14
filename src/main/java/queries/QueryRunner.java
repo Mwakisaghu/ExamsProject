@@ -282,4 +282,234 @@ public class QueryRunner {
         queryManager.closeConnection();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import data.ConfigManager;
+import org.xml.sax.SAXException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class QueryManager {
+    public static Connection connection;
+    public QueryManager() throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException,
+            XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException,
+            BadPaddingException, InvalidKeyException, TransformerException {
+
+    }
+    public static Connection getConnection() {
+        try {
+            ConfigManager configManager = new ConfigManager();
+
+            // Retrieve
+            String driverClass = configManager.getDriverClass();
+            String connectionUrl = configManager.getConnectionURL();
+            String username = configManager.getUsername();
+            String password = configManager.getPassword();
+
+            // Load driver
+            Class.forName(driverClass);
+
+            // Establishing connection
+            connection = DriverManager.getConnection(connectionUrl, username, password);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
+    }
+
+    // Method to execute a SELECT Query with params
+    public static List<HashMap<String, Object>> executeSelectQuery(Connection connection, String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        HashMap<String, Object> selectMap = new HashMap<>();
+
+        try {
+            preparedStatement = connection.prepareStatement(sqlQuery);
+
+            // Set parameters for the prepared statement
+            for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
+                preparedStatement.setObject(entry.getKey(), entry.getValue());
+            }
+
+            resultSet = preparedStatement.executeQuery();
+
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+
+            if (resultSet.next()) {
+                int totalColumns = resultSetMetaData.getColumnCount();
+                for (int i =1 ; i <= totalColumns; i++) {
+                    selectMap.put(resultSetMetaData.getColumnLabel(i), resultSet.getString(i));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        finally {
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        }
+        return resultMap;
+    }
+
+    // Method to execute an INSERT query with parameters and return the generated keys
+    public static HashMap<String, Object> executeInsertQuery(Connection connection, String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        try {
+            preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS);
+
+            // Set parameters for the prepared statement
+            for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
+                preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+            }
+
+            preparedStatement.executeUpdate();
+
+            resultSet = preparedStatement.getGeneratedKeys();
+            resultSet.getMetaData().getColumnCount();
+            while (resultSet.next()) {
+                Object lastInsertVar = resultSet.getObject(1);
+
+                // SQL query to retrieve student data by studentId
+                String selectQuery = "SELECT * FROM students WHERE student_id = ?";
+
+                // Creating a parameter map for the query
+                Map<Integer, Object> selectMap = new HashMap<>();
+                selectMap.put(1, lastInsertVar);
+                resultMap = executeSelectQuery(connection, selectQuery, selectMap);
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        }
+        return resultMap;
+    }
+
+
+    // Method to execute an UPDATE query with parameters
+    public static HashMap<String, Object> executeUpdateQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        HashMap<String, Object> updateMap = new HashMap<>();
+
+        try {
+            preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS);
+
+            // Set parameters for the prepared statement
+            for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
+                preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+            }
+
+            preparedStatement.executeUpdate();
+
+            resultSet = preparedStatement.getGeneratedKeys();
+            resultSet.getMetaData().getColumnCount();
+            while (resultSet.next()) {
+                Object lastInsertVar = resultSet.getObject(1);
+
+                // SQL query to retrieve student data by studentId
+                String selectQuery = "SELECT * FROM students WHERE student_id = ?";
+
+                // Creating a parameter map for the query
+                Map<Integer, Object> selectMap = new HashMap<>();
+                selectMap.put(1, lastInsertVar);
+                updateMap = executeSelectQuery(connection, selectQuery, updateMap);
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (resultSet != null) {
+                resultSet.close();
+            }
+        }
+        return updateMap;
+    }
+
+
+    // Method to execute a DELETE query with parameters
+    public static int executeDeleteQuery(String sqlQuery, Map<Integer, Object> paramMap) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+
+        // Set parameters for the prepared statement
+        for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
+            preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+        }
+
+        return preparedStatement.executeUpdate();
+    }
+
+    // Close the connection
+    public void closeConnection() throws SQLException {
+        if (connection != null) {
+            connection.close();
+        }
+    }
+}
 */
