@@ -3,6 +3,7 @@ package routes;
 import Guardians.CreateGuardian;
 import Guardians.GetGuardian;
 import Guardians.GetGuardians;
+import Guardians.UpdateGuardian;
 import exams.*;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
@@ -76,6 +77,7 @@ public class RoutesHandler {
                 .get("/", new Dispatcher(new GetGuardians()))
                 .get("/{guardianId}", new Dispatcher(new GetGuardian()))
                 .post("/", new BlockingHandler(new CreateGuardian()))
+                .put("/{guardianId}", new BlockingHandler(new UpdateGuardian()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
