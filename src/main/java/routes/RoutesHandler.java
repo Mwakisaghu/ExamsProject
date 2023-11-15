@@ -1,5 +1,6 @@
 package routes;
 
+import Guardians.CreateGuardian;
 import Guardians.GetGuardian;
 import Guardians.GetGuardians;
 import exams.*;
@@ -74,6 +75,7 @@ public class RoutesHandler {
         return Handlers.routing()
                 .get("/", new Dispatcher(new GetGuardians()))
                 .get("/{guardianId}", new Dispatcher(new GetGuardian()))
+                .post("/", new BlockingHandler(new CreateGuardian()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
