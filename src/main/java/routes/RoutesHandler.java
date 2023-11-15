@@ -3,6 +3,7 @@ package routes;
 import exams.CreateExam;
 import exams.GetExam;
 import exams.GetExams;
+import exams.UpdateExam;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
@@ -63,6 +64,7 @@ public class RoutesHandler {
                 .get("/", new Dispatcher(new GetExams()))
                 .get("/{examId}", new Dispatcher(new GetExam()))
                 .post("/", new BlockingHandler(new CreateExam()))
+                .put("/{examId}", new BlockingHandler(new UpdateExam()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
