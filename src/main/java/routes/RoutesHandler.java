@@ -1,5 +1,6 @@
 package routes;
 
+import exams.GetExams;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
@@ -16,6 +17,7 @@ import teachers.*;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Handler;
 
 
 public class RoutesHandler {
@@ -51,6 +53,14 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateSubject()))
                 .put("/{subjectId}", new BlockingHandler(new UpdateSubject()))
                 .delete("/subjectId", new Dispatcher(new DeleteSubject()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+    public  static RoutingHandler exams () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetExams()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
