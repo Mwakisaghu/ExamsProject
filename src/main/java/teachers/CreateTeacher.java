@@ -1,69 +1,77 @@
 package teachers;
 
 import com.google.gson.Gson;
+
+
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
+import org.xml.sax.SAXException;
 import queries.QueryManager;
+import responses.StatusResponses;
 import rest.RestUtils;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Map;
 
 import static queries.QueryManager.connection;
 
 public class CreateTeacher implements HttpHandler {
-    @Override
-    public void handleRequest(HttpServerExchange exchange) {
+    public void handleRequest(HttpServerExchange exchange) throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
         // Extract the request body
         String reqBody = RestUtils.getRequestBody(exchange);
 
         Gson gson = new Gson();
         HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
-        if (requestBodyMap == null) {
+        // Check for the presence of a valid request body
+        if (requestBodyMap == null || !isValidRequest(requestBodyMap)) {
             // Bad Request
-            sendResponse(exchange, 400, "Error: Invalid request - request body not found");
+            StatusResponses.sendErrorResponse(exchange, "Error: Invalid request - missing or invalid fields");
             return;
         }
 
-                // Define the SQL INSERT query
-                String insertQuery = "INSERT INTO teachers (teacher_id, tsc_number, first_name, middle_name, last_name, gender, title, home_address, city, state, mobile_number, email_address, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)";
+        // Build dynamic SQL INSERT query
+        String tableName = "teachers";
+        String columns = String.join(", ", requestBodyMap.keySet());
+        String values = String.join(", ", new String(new char[requestBodyMap.size()]).replace("\0", "?").split(""));
 
-                // Prepare the parameters for the INSERT operation
-                HashMap<Integer, Object> insertMap = new HashMap<>();
-                insertMap.put(2, requestBodyMap.get("tsc_number"));
-                insertMap.put(3, requestBodyMap.get("first_name"));
-                insertMap.put(4, requestBodyMap.get("middle_name"));
-                insertMap.put(5, requestBodyMap.get("last_name"));
-                insertMap.put(6, requestBodyMap.get("gender"));
-                insertMap.put(7, requestBodyMap.get("title"));
-                insertMap.put(8, requestBodyMap.get("home_address"));
-                insertMap.put(9, requestBodyMap.get("city"));
-                insertMap.put(10, requestBodyMap.get("state"));
-                insertMap.put(11, requestBodyMap.get("mobile_number"));
-                insertMap.put(12, requestBodyMap.get("email_address"));
+        String insertQuery = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")";
 
+        // Prepare the parameters for the INSERT operation
+        Map<Integer, Object> insertMap = new HashMap<>();
+        int parameterIndex = 1;
+        for (Object value : requestBodyMap.values()) {
+            insertMap.put(parameterIndex++, value);
+        }
+
+        try {
+            // Execute the dynamic SQL INSERT query using the QueryManager
+            QueryManager.executeInsertQuery(insertQuery, insertMap);
+
+            // Created Successfully
+            StatusResponses.sendSuccessResponse(exchange, "Teacher Created successfully");
+        } finally {
+            if (connection != null) {
                 try {
-                QueryManager.executeSelectQuery(insertQuery, insertMap);
-
-                sendResponse(exchange, 201, "Teacher Created Successfully");
-
-            } finally {
-                if (connection != null) {
-                    try {
-                        connection.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
         }
+    }
 
-    private void sendResponse(HttpServerExchange exchange, int statusCode, String message) {
-        exchange.setStatusCode(statusCode);
-        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-        exchange.getResponseSender().send(message);
+    private boolean isValidRequest(Map<String, Object> requestBody) {
+        // Check if required fields are present and have valid values
+        return requestBody.containsKey("email_address") && requestBody.containsKey("gender") &&
+                requestBody.containsKey("home_address") && requestBody.containsKey("city") &&
+                requestBody.containsKey("teacher_id") && requestBody.containsKey("tsc_number") &&
+                requestBody.containsKey("middle_name") && requestBody.containsKey("last_name") &&
+                requestBody.containsKey("state") && requestBody.containsKey("title") &&
+                requestBody.containsKey("mobile_number") && requestBody.containsKey("first_name");
     }
 }

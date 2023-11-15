@@ -1,9 +1,10 @@
 package students;
 
 import com.google.gson.Gson;
+
+
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
 import org.xml.sax.SAXException;
 import queries.QueryManager;
 import responses.StatusResponses;
@@ -19,7 +20,6 @@ import java.util.Map;
 import static queries.QueryManager.connection;
 
 public class CreateStudent implements HttpHandler {
-    @Override
     public void handleRequest(HttpServerExchange exchange) throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
         // Extract the request body
         String reqBody = RestUtils.getRequestBody(exchange);
@@ -28,28 +28,28 @@ public class CreateStudent implements HttpHandler {
         HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
         // Check for the presence of a valid request body
-        if (requestBodyMap == null) {
+        if (requestBodyMap == null || !isValidRequest(requestBodyMap)) {
             // Bad Request
-            StatusResponses.sendErrorResponse(exchange, "Error : Invalid request - request body not found");
+            StatusResponses.sendErrorResponse(exchange, "Error: Invalid request - missing or invalid fields");
+            return;
         }
 
-        // Define the SQL INSERT query
-        String insertQuery = "INSERT INTO students ( first_name, middle_name, last_name, class_tier_id, date_of_birth, gender, email_address, created_at) " +
-                "VALUES ( ?, ?, ?, ?, ?, ?, ?, current_timestamp)";
+        // Build dynamic SQL INSERT query
+        String tableName = "students";
+        String columns = String.join(", ", requestBodyMap.keySet());
+        String values = String.join(", ", new String(new char[requestBodyMap.size()]).replace("\0", "?").split(""));
+
+        String insertQuery = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")";
 
         // Prepare the parameters for the INSERT operation
         Map<Integer, Object> insertMap = new HashMap<>();
-        assert requestBodyMap != null;
-        insertMap.put(1, requestBodyMap.get("first_name"));
-        insertMap.put(2, requestBodyMap.get("middle_name"));
-        insertMap.put(3, requestBodyMap.get("last_name"));
-        insertMap.put(4, requestBodyMap.get("class_tier_id"));
-        insertMap.put(5, requestBodyMap.get("date_of_birth"));
-        insertMap.put(6, requestBodyMap.get("gender"));
-        insertMap.put(7, requestBodyMap.get("email_address"));
+        int parameterIndex = 1;
+        for (Object value : requestBodyMap.values()) {
+            insertMap.put(parameterIndex++, value);
+        }
 
         try {
-            // Execute the SQL INSERT query using the QueryManager
+            // Execute the dynamic SQL INSERT query using the QueryManager
             QueryManager.executeInsertQuery(insertQuery, insertMap);
 
             // Created Successfully
@@ -63,5 +63,13 @@ public class CreateStudent implements HttpHandler {
                 }
             }
         }
+    }
+
+    private boolean isValidRequest(Map<String, Object> requestBody) {
+        // Check if required fields are present and have valid values
+        return requestBody.containsKey("first_name") && requestBody.containsKey("middle_name") &&
+                requestBody.containsKey("last_name") && requestBody.containsKey("class_tier_id") &&
+                requestBody.containsKey("date_of_birth") && requestBody.containsKey("gender") &&
+                requestBody.containsKey("email_address");
     }
 }
