@@ -17,8 +17,6 @@ import teachers.*;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Handler;
-
 
 public class RoutesHandler {
     public static RoutingHandler students () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
@@ -58,7 +56,7 @@ public class RoutesHandler {
                 .setFallbackHandler(new Dispatcher(new FallBack()));
     }
 
-    public  static RoutingHandler exams () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+    public static RoutingHandler exams () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
         return Handlers.routing()
                 .get("/", new Dispatcher(new GetExams()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
