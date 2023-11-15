@@ -1,6 +1,7 @@
 package routes;
 
 import Guardians.GetGuardian;
+import Guardians.GetGuardians;
 import exams.*;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
@@ -71,6 +72,7 @@ public class RoutesHandler {
 
     public static RoutingHandler guardians () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
         return Handlers.routing()
+                .get("/", new Dispatcher(new GetGuardians()))
                 .get("/{guardianId}", new Dispatcher(new GetGuardian()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
