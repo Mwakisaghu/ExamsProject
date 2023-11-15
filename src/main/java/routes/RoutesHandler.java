@@ -1,5 +1,6 @@
 package routes;
 
+import exams.CreateExam;
 import exams.GetExam;
 import exams.GetExams;
 import io.undertow.Handlers;
@@ -61,6 +62,7 @@ public class RoutesHandler {
         return Handlers.routing()
                 .get("/", new Dispatcher(new GetExams()))
                 .get("/{examId}", new Dispatcher(new GetExam()))
+                .post("/", new BlockingHandler(new CreateExam()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
