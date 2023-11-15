@@ -1,9 +1,6 @@
 package routes;
 
-import exams.CreateExam;
-import exams.GetExam;
-import exams.GetExams;
-import exams.UpdateExam;
+import exams.*;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
@@ -53,7 +50,7 @@ public class RoutesHandler {
                 .get("/{subjectId}", new Dispatcher(new GetSubject()))
                 .post("/", new BlockingHandler(new CreateSubject()))
                 .put("/{subjectId}", new BlockingHandler(new UpdateSubject()))
-                .delete("/subjectId", new Dispatcher(new DeleteSubject()))
+                .delete("/{subjectId}", new Dispatcher(new DeleteSubject()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
@@ -65,6 +62,7 @@ public class RoutesHandler {
                 .get("/{examId}", new Dispatcher(new GetExam()))
                 .post("/", new BlockingHandler(new CreateExam()))
                 .put("/{examId}", new BlockingHandler(new UpdateExam()))
+                .delete("/{examId}", new Dispatcher(new DeleteExam()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
