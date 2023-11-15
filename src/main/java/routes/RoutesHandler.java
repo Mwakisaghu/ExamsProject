@@ -1,5 +1,6 @@
 package routes;
 
+import exams.GetExam;
 import exams.GetExams;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
@@ -59,6 +60,7 @@ public class RoutesHandler {
     public static RoutingHandler exams () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
         return Handlers.routing()
                 .get("/", new Dispatcher(new GetExams()))
+                .get("/{examId}", new Dispatcher(new GetExam()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
