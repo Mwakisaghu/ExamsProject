@@ -7,6 +7,7 @@ import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
 import io.undertow.util.Methods;
 import org.xml.sax.SAXException;
+import questions.*;
 import rest.CorsHandler;
 import rest.Dispatcher;
 import rest.FallBack;
@@ -76,6 +77,18 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateGuardian()))
                 .put("/{guardianId}", new BlockingHandler(new UpdateGuardian()))
                 .delete("/{guardianId}", new Dispatcher(new DeleteGuardian()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+    public static RoutingHandler questions () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetQuestion()))
+                .get("/{questionId}", new Dispatcher(new GetQuestions()))
+                .post("/", new BlockingHandler(new CreateQuestion()))
+                .put("/{questionId}", new BlockingHandler(new UpdateQuestion()))
+                .delete("/{questionId}", new Dispatcher(new DeleteQuestion()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
