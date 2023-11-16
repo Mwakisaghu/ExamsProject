@@ -7,7 +7,10 @@ import io.undertow.util.URLUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Deque;
+import java.util.HashMap;
 
 public class RestUtils {
 
@@ -50,6 +53,26 @@ public class RestUtils {
             }
         }
         return builder.toString();
+    }
+
+    public static HashMap<String, String> getQueryParams(HttpServerExchange exchange, String... keys) {
+
+        HashMap<String, String> params = new HashMap<>();
+        Deque<String> param = null;
+
+        for (String key : keys) {
+            param = exchange.getQueryParameters().get(key);
+
+            if (param != null && !param.getFirst().isEmpty())
+            {
+                String paramStr = param.getFirst();
+                paramStr = URLDecoder.decode(paramStr, StandardCharsets.UTF_8);
+                params.put(key, paramStr);
+
+            }
+        }
+
+        return params;
     }
 }
 
