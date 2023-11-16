@@ -33,14 +33,14 @@ public class GetStudent implements HttpHandler {
         try {
             // Converting the "studentId" to an integer
             assert strStudentId != null;
-            int teacherId = Integer.parseInt(strStudentId);
+            int studentId = Integer.parseInt(strStudentId);
 
             // SQL query to retrieve teachers data by teacherId
             String selectQuery = "SELECT * FROM students WHERE student_id = ?";
 
             // Creating a parameter map for the query
             Map<Integer, Object> paramMap = new LinkedHashMap<>();
-            paramMap.put(1, strStudentId);
+            paramMap.put(1, studentId);
 
             // Executing the SQL query using the QueryManager
             List<LinkedHashMap<String, Object>> studentMap = QueryManager.executeSelectQuery(selectQuery, (HashMap<Integer, Object>) paramMap);
