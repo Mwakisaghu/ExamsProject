@@ -2,9 +2,8 @@ package exams;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
-import io.undertow.util.StatusCodes;
 import queries.QueryManager;
+import responses.StatusResponses;
 import rest.RestUtils;
 
 import java.sql.SQLException;
@@ -34,20 +33,14 @@ public class DeleteExam implements HttpHandler {
 
             if (rowsDeleted > 0) {
                 // Success response
-                exchange.setStatusCode(StatusCodes.OK);
-                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-                exchange.getResponseSender().send("Success: Deleted " + rowsDeleted + " rows");
+                StatusResponses.sendSuccessResponse(exchange, "Success: Deleted " + rowsDeleted + " rows");
             } else {
                 // User not found
-                exchange.setStatusCode(StatusCodes.NOT_FOUND);
-                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-                exchange.getResponseSender().send("Error: Exam not found");
+                StatusResponses.send404NotFoundResponse(exchange, "Error: Exam not found");
             }
         } catch (NumberFormatException e) {
-            // Handles case where an invalid teacherId is provided
-            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-            exchange.getResponseSender().send("Error: Invalid examId");
+            // Handles case where an invalid teacherId is provided - bad req
+            StatusResponses.sendErrorResponse(exchange, "Error: Invalid examId");
         } finally {
             if (connection != null) {
                 try {
