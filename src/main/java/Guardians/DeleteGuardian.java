@@ -21,14 +21,14 @@ public class DeleteGuardian implements HttpHandler {
         Connection connection = null;
         try {
             assert strGuardianId != null;
-            int studentId = Integer.parseInt(strGuardianId);
+            int sanswerId = Integer.parseInt(strGuardianId);
 
             // Defining the SQL delete query
-            String deleteQuery = "DELETE FROM guardian WHERE guardian_id = ?";
+            String deleteQuery = "DELETE FROM guardian WHERE answer_id = ?";
 
             // Creating a parameter map for the query
             Map<Integer, Object> deleteMap = new HashMap<>();
-            deleteMap.put(1, studentId);
+            deleteMap.put(1, sanswerId);
 
             // Executing the SQL delete using the QueryManager
             int rowsDeleted = QueryManager.executeDeleteQuery(deleteQuery, deleteMap);
@@ -38,7 +38,7 @@ public class DeleteGuardian implements HttpHandler {
                 StatusResponses.sendSuccessResponse(exchange, "Success: Deleted " + rowsDeleted + " rows");
             } else {
                 // User not found
-                StatusResponses.send404NotFoundResponse(exchange, "Error: Guardian not found");
+                StatusResponses.send404NotFoundResponse(exchange, "Error:Anser not found");
             }
         } catch (NumberFormatException e) {
             // Handles case where an invalid guardianId is provided - bad request
