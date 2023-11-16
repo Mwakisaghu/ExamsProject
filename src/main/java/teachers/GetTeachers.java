@@ -1,62 +1,77 @@
 package teachers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.gson.*;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
+import io.undertow.util.StatusCodes;
+import jdk.jshell.Snippet;
 import queries.QueryManager;
 import responses.StatusResponses;
 
-import java.sql.SQLException;
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static queries.QueryManager.connection;
 
 public class GetTeachers implements HttpHandler {
     @Override
-    public void handleRequest(HttpServerExchange exchange) {
+    public void handleRequest(HttpServerExchange exchange) throws Exception {
         try {
-            List<LinkedHashMap<String, Object>> teachers = retrieveTeachersFromDatabase();
+            // SQL query to retrieve teachers data with additional filtering criteria if provided
+            String selectQuery = "SELECT * FROM teachers";
 
-            if (teachers != null) {
-                // Converting the list of teachers into JSON
-                String jsonResponse = convertTeachersListToJson(teachers);
+            // Creating a parameter map for the query
+            HashMap<Integer, Object> paramMap = new LinkedHashMap<>();
 
+            // Executing the SQL query using the QueryManager
+            List<LinkedHashMap<String, Object>> result = QueryManager.executeSelectQuery(selectQuery, paramMap);
+
+            if (!result.isEmpty()) {
+                // The query result is a list of rows, and each row is a LinkedHashMap
+                List<Map<String, Object>> teachersData = new ArrayList<>();
+
+                for (LinkedHashMap<String, Object> row : result) {
+                    teachersData.add(row);
+                }
+
+                // Creating a JSON response
+                Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+                String strJsonResponse = gson.toJson(teachersData);
+
+                // Setting the HTTP response status code to 200 (OK)
+                exchange.setStatusCode(StatusCodes.OK);
+
+                // Setting the response content type to "application/json"
                 exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                exchange.getResponseSender().send(jsonResponse);
+
+                // Sending the JSON response to the client
+                exchange.getResponseSender().send(strJsonResponse);
             } else {
-                StatusResponses.sendErrorResponse(exchange, "Error: Failed to retrieve teacher data from the database");
+                // No teachers found
+                StatusResponses.send404NotFoundResponse(exchange, "Error: No teachers found");
             }
         } catch (Exception e) {
-            // Handle exceptions here
+            // Handle other errors
             e.printStackTrace();
-
-            // Internal server response
-            StatusResponses.sendInternalServerErrorResponse(exchange, "Error: Internal server error");
-        }
-    }
-
-    private List<LinkedHashMap<String, Object>> retrieveTeachersFromDatabase() {
-        try {
-            String selectQuery = "SELECT * FROM teachers";
-            return QueryManager.executeSelectQuery(selectQuery, new HashMap<>());
+            StatusResponses.sendInternalServerErrorResponse(exchange, "Error: Internal Server Error");
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    private String convertTeachersListToJson(List<LinkedHashMap<String, Object>> teachers) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());  // Register JavaTimeModule for Java 8 date/time support
-
-        return objectMapper.writeValueAsString(teachers);
+    private static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime> {
+        @Override
+        public JsonElement serialize(LocalDateTime localDateTime, Type srcType, JsonSerializationContext context) {
+            return context.serialize(localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        }
     }
 }
