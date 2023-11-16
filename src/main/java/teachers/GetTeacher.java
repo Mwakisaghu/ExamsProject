@@ -1,5 +1,6 @@
 package teachers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -10,6 +11,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 import queries.QueryManager;
+import responses.StatusResponses;
 import rest.RestUtils;
 
 import java.lang.reflect.Type;
@@ -61,21 +63,17 @@ public class GetTeacher implements HttpHandler {
                 exchange.getResponseSender().send(strJsonResponse);
             } else {
                 // Teacher not found
-                exchange.setStatusCode(StatusCodes.NOT_FOUND);
-                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                exchange.getResponseSender().send("Error: Teacher not found");
+                StatusResponses.send404NotFoundResponse(exchange, "Error: Teacher not Found");
             }
         } catch (NumberFormatException e) {
             // Handle the case where an invalid teacherId is provided
-            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+            StatusResponses.sendErrorResponse(exchange, "Error: Invalid teacherId");
             exchange.getResponseSender().send("Error: Invalid teacherId");
         } catch (Exception e) {
             // Handle other errors
             e.printStackTrace();
-            exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send("Error: Internal Server Error");
+
+            StatusResponses.sendInternalServerErrorResponse(exchange, "Error: Internal Server Error");
         } finally {
             if (connection != null) {
                 try {
