@@ -30,7 +30,7 @@ public class UpdateGuardian implements HttpHandler {
         try {
             // Parsing the "guardian_id" as an integer
             assert strGuardianId != null;
-            int examId = Integer.parseInt(strGuardianId);
+            int guardianId = Integer.parseInt(strGuardianId);
 
             // Parsing the request body as JSON
             Gson gson = new Gson();
@@ -54,7 +54,7 @@ public class UpdateGuardian implements HttpHandler {
                     paramIndex++;
                 }
                 updateSqlBuilder.append(" WHERE guardian_id = ?");
-                updateMap.put(paramIndex, examId);
+                updateMap.put(paramIndex, guardianId);
 
                 // Execute the SQL update using the QueryManager
                 int affectedRows = QueryManager.executeUpdateQuery(updateSqlBuilder.toString(), updateMap).size();
