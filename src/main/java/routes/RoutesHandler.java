@@ -3,6 +3,7 @@ package routes;
 import Guardians.*;
 import answers.*;
 import exams.*;
+import grades.*;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
@@ -103,6 +104,18 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateAnswer()))
                 .put("/{answerId}", new BlockingHandler(new UpdateAnswer()))
                 .delete("/{answerId}", new Dispatcher(new DeleteAnswer()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+    public static RoutingHandler grades () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetGrade()))
+                .get("/{gradeId}", new Dispatcher(new GetGrades()))
+                .post("/", new BlockingHandler(new CreateGrade()))
+                .put("/{gradeId}", new BlockingHandler(new UpdateGrade()))
+                .delete("/{gradeId}", new Dispatcher(new DeleteGrade()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));

@@ -27,7 +27,8 @@ public class Main {
                     .addPrefixPath(BASE_URL + "/exams", RoutesHandler.exams())
                     .addPrefixPath(BASE_URL + "/guardians", RoutesHandler.guardians())
                     .addPrefixPath(BASE_URL + "/questions", RoutesHandler.questions())
-                    .addPrefixPath(BASE_URL + "/answers", RoutesHandler.answers());
+                    .addPrefixPath(BASE_URL + "/answers", RoutesHandler.answers())
+                    .addPrefixPath(BASE_URL + "/grades", RoutesHandler.grades());
 
 
             Undertow server = Undertow.builder()
