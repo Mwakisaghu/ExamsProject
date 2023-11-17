@@ -1,6 +1,7 @@
 package routes;
 
 import Guardians.*;
+import answers.*;
 import exams.*;
 import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
@@ -89,6 +90,19 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateQuestion()))
                 .put("/{questionId}", new BlockingHandler(new UpdateQuestion()))
                 .delete("/{questionId}", new Dispatcher(new DeleteQuestion()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+
+    public static RoutingHandler answers () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetAnswer()))
+                .get("/{answerId}", new Dispatcher(new GetAnswers()))
+                .post("/", new BlockingHandler(new CreateAnswer()))
+                .put("/{answerId}", new BlockingHandler(new UpdateAnswer()))
+                .delete("/{answerId}", new Dispatcher(new DeleteAnswer()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
