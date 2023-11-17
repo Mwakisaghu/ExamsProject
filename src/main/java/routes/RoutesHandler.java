@@ -8,6 +8,7 @@ import io.undertow.Handlers;
 import io.undertow.server.RoutingHandler;
 import io.undertow.server.handlers.BlockingHandler;
 import io.undertow.util.Methods;
+import multiple_choices.*;
 import org.xml.sax.SAXException;
 import questions.*;
 import rest.CorsHandler;
@@ -116,6 +117,18 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateGrade()))
                 .put("/{gradeId}", new BlockingHandler(new UpdateGrade()))
                 .delete("/{gradeId}", new Dispatcher(new DeleteGrade()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+    public static RoutingHandler multiple_choices () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetChoice()))
+                .get("/{choiceId}", new Dispatcher(new GetChoices()))
+                .post("/", new BlockingHandler(new CreateChoice()))
+                .put("/{choiceId}", new BlockingHandler(new UpdateChoice()))
+                .delete("/{choiceId}", new Dispatcher(new DeleteChoice()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
