@@ -2,6 +2,7 @@ package routes;
 
 import Guardians.*;
 import answers.*;
+import class_tier.*;
 import exams.*;
 import grades.*;
 import io.undertow.Handlers;
@@ -129,6 +130,18 @@ public class RoutesHandler {
                 .post("/", new BlockingHandler(new CreateChoice()))
                 .put("/{choiceId}", new BlockingHandler(new UpdateChoice()))
                 .delete("/{choiceId}", new Dispatcher(new DeleteChoice()))
+                .add(Methods.OPTIONS, "/*", new CorsHandler())
+                .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
+                .setFallbackHandler(new Dispatcher(new FallBack()));
+    }
+
+    public static RoutingHandler class_tiers () throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+        return Handlers.routing()
+                .get("/", new Dispatcher(new GetTier()))
+                .get("/{tierId}", new Dispatcher(new GetTiers()))
+                .post("/", new BlockingHandler(new CreateTier()))
+                .put("/{tierId}", new BlockingHandler(new UpdateTier()))
+                .delete("/{tierId}", new Dispatcher(new DeleteTier()))
                 .add(Methods.OPTIONS, "/*", new CorsHandler())
                 .setInvalidMethodHandler(new Dispatcher(new InvalidMethod()))
                 .setFallbackHandler(new Dispatcher(new FallBack()));
