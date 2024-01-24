@@ -13,7 +13,7 @@ public class EncryptConfigsXml {
     private static IvParameterSpec ivParameterSpec;
 
     public EncryptConfigsXml() throws NoSuchAlgorithmException {
-        // Initialize the secretKey and ivParameterSpec here, unconditionally
+        // Initialize the secretKey and ivParameterSpec
         secretKey = generateSecretKey();
         ivParameterSpec = generateIvParameterSpec();
     }

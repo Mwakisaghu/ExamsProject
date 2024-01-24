@@ -68,16 +68,12 @@ public class ConfigManager {
 
         String decryptedDbName = null;
         if (isEncrypted((Element) databaseNameNode)) {
-            // If not encrypted, return the clear-text value
-            String encryptedDbName = EncryptConfigsXml.encrypt(databaseNameNode.getTextContent(), secretKey, ivParameterSpec);
-            databaseNameNode.setTextContent(encryptedDbName);
-            ((Element) databaseNameNode).setAttribute("TYPE", "ENCRYPTED");
-            saveDocument();
-
-            System.out.println(encryptedDbName + ": Updated and Encrypted Db Name");
-
+            // If encrypted, decrypt the value
+            String encryptedDbName = databaseNameNode.getTextContent();
             decryptedDbName = EncryptConfigsXml.decrypt(encryptedDbName, secretKey, ivParameterSpec);
-            System.out.println(decryptedDbName + "--decrypted Db Name");
+        } else {
+            // If not encrypted, return the clear-text value
+            decryptedDbName = databaseNameNode.getTextContent();
         }
         return decryptedDbName;
     }
@@ -88,17 +84,12 @@ public class ConfigManager {
 
         String decryptedUsername = null;
         if (isEncrypted((Element) usernameNode)) {
-            // If not encrypted => encrypt => set the attribute to "ENCRYPTED"
-            String encryptedUsername = EncryptConfigsXml.encrypt(usernameNode.getTextContent(), secretKey, ivParameterSpec);
-            usernameNode.setTextContent(encryptedUsername);
-            ((Element) usernameNode).setAttribute("TYPE", "ENCRYPTED");
-            saveDocument();
-
-            System.out.println(encryptedUsername + ": Updated and Encrypted Username");
-
+            // If encrypted, decrypt the value
+            String encryptedUsername = usernameNode.getTextContent();
             decryptedUsername = EncryptConfigsXml.decrypt(encryptedUsername, secretKey, ivParameterSpec);
-            System.out.println(decryptedUsername + "--decryptedUsername--");
-
+        } else {
+            // If not encrypted, return the clear-text value
+            decryptedUsername = usernameNode.getTextContent();
         }
         return decryptedUsername;
     }
@@ -109,17 +100,12 @@ public class ConfigManager {
 
         String decryptedPassword = null;
         if (isEncrypted((Element) passwordNode)) {
-            // If not encrypted => encrypt => set the attribute to "ENCRYPTED"
-            String encryptedPassword = EncryptConfigsXml.encrypt(passwordNode.getTextContent(), secretKey, ivParameterSpec);
-            passwordNode.setTextContent(encryptedPassword);
-            ((Element) passwordNode).setAttribute("TYPE", "ENCRYPTED");
-            saveDocument();
-
-            System.out.println(encryptedPassword + ": Updated and Encrypted Password");
-
+            // If encrypted, decrypt the value
+            String encryptedPassword = passwordNode.getTextContent();
             decryptedPassword = EncryptConfigsXml.decrypt(encryptedPassword, secretKey, ivParameterSpec);
-            System.out.println(decryptedPassword + "--decryptedPassword--");
-
+        } else {
+            // If not encrypted, return the clear-text value
+            decryptedPassword = passwordNode.getTextContent();
         }
         return decryptedPassword;
     }
@@ -127,15 +113,6 @@ public class ConfigManager {
     // Checking for the Encryption Status
     private boolean isEncrypted(Element element) {
         String typeAttribute = element.getAttribute("TYPE");
-        return !"ENCRYPTED".equalsIgnoreCase(typeAttribute);
-    }
-
-    private void saveDocument() throws TransformerException {
-        // Writing the updated document back to the XML file
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(new File("configs/config.xml"));
-        transformer.transform(source, result);
+        return "ENCRYPTED".equalsIgnoreCase(typeAttribute);
     }
 }
