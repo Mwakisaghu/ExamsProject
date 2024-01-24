@@ -13,11 +13,9 @@ public class EncryptConfigsXml {
     private static IvParameterSpec ivParameterSpec;
 
     public EncryptConfigsXml() throws NoSuchAlgorithmException {
-        // Initialize the secretKey and ivParameterSpec here, but only once
-        if (secretKey == null) {
-            secretKey = generateSecretKey();
-            ivParameterSpec = generateIvParameterSpec();
-        }
+        // Initialize the secretKey and ivParameterSpec here, unconditionally
+        secretKey = generateSecretKey();
+        ivParameterSpec = generateIvParameterSpec();
     }
 
     public static SecretKey generateSecretKey() throws NoSuchAlgorithmException {
