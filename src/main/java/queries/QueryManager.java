@@ -6,10 +6,12 @@ import org.xml.sax.SAXException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
+import javax.xml.xpath.*;
+import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +23,7 @@ public class QueryManager {
     public static Connection connection;
 
     // Establish a database connection
-    public static Connection getConnection() throws ParserConfigurationException, IOException, NoSuchAlgorithmException, SAXException {
+    public static Connection getConnection() throws ParserConfigurationException, IOException, SAXException, NoSuchAlgorithmException {
         // Initialize the ConfigManager - read database configuration
         ConfigManager configManager = new ConfigManager();
 
@@ -57,14 +59,14 @@ public class QueryManager {
 
             // Setting the parameter values in the prepared statement
             for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-                preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+                preparedStatement.setObject(entry.getKey(), entry.getValue());
             }
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 int count = metaData.getColumnCount();
 
-                // Iterate through the result set , extract data
+                // Iterate through the result set, extract data
                 while (resultSet.next()) {
                     LinkedHashMap<String, Object> result = new LinkedHashMap<>();
                     for (int i = 1; i <= count; i++) {
@@ -125,7 +127,7 @@ public class QueryManager {
 
             // Set parameter values in the prepared statement
             for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-                preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+                preparedStatement.setObject(entry.getKey(), entry.getValue());
             }
 
             int updatedRows = preparedStatement.executeUpdate();
@@ -161,9 +163,8 @@ public class QueryManager {
 
             // Setting parameter values in the prepared statement
             for (Map.Entry<Integer, Object> entry : paramMap.entrySet()) {
-                preparedStatement.setObject(Integer.parseInt(String.valueOf(entry.getKey())), entry.getValue());
+                preparedStatement.setObject(entry.getKey(), entry.getValue());
             }
-
 
             deletedRows = preparedStatement.executeUpdate();
         } catch (SQLException | ParserConfigurationException | IOException | NoSuchAlgorithmException | SAXException e) {
