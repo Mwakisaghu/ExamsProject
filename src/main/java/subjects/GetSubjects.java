@@ -20,16 +20,17 @@ public class GetSubjects implements HttpHandler {
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         List<LinkedHashMap<String, Object>> subjects = retrieveSubjectsFromDb();
 
-        // Ensure student is not null
-        if(subjects != null) {
-            // Convert the result set into a json obj
+        if (subjects != null) {
+            // Convert the result set into a JSON object
             String jsonResponse = convertSubjectsListToJson(subjects);
 
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(jsonResponse);
+        } else {
+            sendResponse(exchange, 400, "Error: Student cannot be null");
         }
-        sendResponse(exchange, 400, "Error : Student cannot be null");
     }
+
     private List<LinkedHashMap<String, Object>> retrieveSubjectsFromDb() {
         try {
             String selectQuery = "SELECT * FROM subjects";
@@ -45,6 +46,7 @@ public class GetSubjects implements HttpHandler {
             }
         }
     }
+
     private String convertSubjectsListToJson(List<LinkedHashMap<String, Object>> students) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         // Register JavaTimeModule for Java 8 date/time support
@@ -52,6 +54,7 @@ public class GetSubjects implements HttpHandler {
 
         return objectMapper.writeValueAsString(students);
     }
+
     private void sendResponse(HttpServerExchange exchange, int statusCode, String message) {
         exchange.setStatusCode(statusCode);
         exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
