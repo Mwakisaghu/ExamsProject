@@ -10,6 +10,7 @@ import java.util.Base64;
 
 public class EncryptConfigsXml {
     private static SecretKey secretKey;
+    @SuppressWarnings("unused")
     private static IvParameterSpec ivParameterSpec;
 
     public EncryptConfigsXml() throws NoSuchAlgorithmException {

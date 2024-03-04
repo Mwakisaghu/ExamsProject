@@ -24,6 +24,7 @@ public class CreateAnswer implements HttpHandler {
         String reqBody = RestUtils.getRequestBody(exchange);
 
         Gson gson = new Gson();
+        @SuppressWarnings("unchecked")
         HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
         // Check for the presence of a valid request body

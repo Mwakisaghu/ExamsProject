@@ -34,6 +34,7 @@ public class UpdateAnswer implements HttpHandler {
 
             // Parsing the request body as JSON
             Gson gson = new Gson();
+            @SuppressWarnings("unchecked")
             HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
             // Checking for the request body

@@ -3,8 +3,6 @@ package teachers;
 import com.google.gson.Gson;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
-import io.undertow.util.StatusCodes;
 import queries.QueryManager;
 import responses.StatusResponses;
 import rest.RestUtils;
@@ -35,6 +33,7 @@ public class UpdateTeacher implements HttpHandler {
 
             // Parsing the request body as JSON
             Gson gson = new Gson();
+            @SuppressWarnings("unchecked")
             HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
             // Checking for the request body

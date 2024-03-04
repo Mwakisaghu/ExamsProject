@@ -16,6 +16,7 @@ import responses.StatusResponses;
 
 import static queries.QueryManager.connection;
 
+@SuppressWarnings("unused")
 public class GetStudents implements HttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {

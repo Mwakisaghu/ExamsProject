@@ -16,6 +16,7 @@ import java.util.*;
 
 import static queries.QueryManager.connection;
 
+@SuppressWarnings("unused")
 public class GetTeachers implements HttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {

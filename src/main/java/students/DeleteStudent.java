@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class DeleteStudent implements HttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {

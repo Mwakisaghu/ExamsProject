@@ -6,8 +6,7 @@ import org.xml.sax.SAXException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
+
 import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
@@ -169,7 +168,6 @@ public class QueryManager {
             deletedRows = preparedStatement.executeUpdate();
         } catch (SQLException | ParserConfigurationException | IOException | NoSuchAlgorithmException | SAXException e) {
             e.printStackTrace();
-            // Handle or log any exceptions
         }
         return deletedRows;
     }
