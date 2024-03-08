@@ -4,13 +4,12 @@ import encryption.EncryptConfigsXml;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
@@ -31,10 +30,24 @@ public class ConfigManager {
         XPathFactory xPathfactory = XPathFactory.newInstance();
         xPath = xPathfactory.newXPath();
 
-        this.secretKey = EncryptConfigsXml.generateSecretKey();
-        this.ivParameterSpec = EncryptConfigsXml.generateIvParameterSpec();
+        // Retrieving the secret key and IV from the encryption class - if already generated
+        this.secretKey = EncryptConfigsXml.getSecretKey();
+        this.ivParameterSpec = EncryptConfigsXml.getIvParameterSpec();
+
+        // Check if the secret key and iv are null
+        if (this.secretKey == null || this.ivParameterSpec == null) {
+            this.secretKey = EncryptConfigsXml.generateSecretKey();
+            this.ivParameterSpec = EncryptConfigsXml.generateIvParameterSpec();
+
+            // Saving the generated secret key and IV
+            EncryptConfigsXml.setSecretKey(secretKey);
+            EncryptConfigsXml.setIvParameterSpec(ivParameterSpec);
+        }
+        System.out.println("Secret Key (Encryption): " + secretKey);
+        System.out.println("IV Parameter (Encryption): " + ivParameterSpec);
     }
 
+    // Retrieving config elements
     public String getDriverClass() throws XPathExpressionException {
         XPathExpression expr = xPath.compile("/CONFIG/DB/DRIVER_CLASS");
         return expr.evaluate(doc);
@@ -65,13 +78,17 @@ public class ConfigManager {
         Node databaseNameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedDbName = null;
-        if (isEncrypted((Element) databaseNameNode)) {
-            // If encrypted, decrypt the value
+        if (databaseNameNode != null) {
             String encryptedDbName = databaseNameNode.getTextContent();
-            decryptedDbName = EncryptConfigsXml.decrypt(encryptedDbName, secretKey, ivParameterSpec);
-        } else {
-            // If not encrypted, return the clear-text value
-            decryptedDbName = databaseNameNode.getTextContent();
+            if (isEncrypted((Element) databaseNameNode)) {
+                // If encrypted, decrypt the value
+                decryptedDbName = EncryptConfigsXml.decrypt(encryptedDbName, secretKey, ivParameterSpec);
+                System.out.println("Decrypted database name: " + decryptedDbName);
+            } else {
+                // If not encrypted, return the clear-text value
+                decryptedDbName = encryptedDbName;
+                System.out.println("Database name retrieved from config XML: " + decryptedDbName);
+            }
         }
         return decryptedDbName;
     }
@@ -81,13 +98,17 @@ public class ConfigManager {
         Node usernameNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedUsername = null;
-        if (isEncrypted((Element) usernameNode)) {
-            // If encrypted, decrypt the value
+        if (usernameNode != null) {
             String encryptedUsername = usernameNode.getTextContent();
-            decryptedUsername = EncryptConfigsXml.decrypt(encryptedUsername, secretKey, ivParameterSpec);
-        } else {
-            // If not encrypted, return the clear-text value
-            decryptedUsername = usernameNode.getTextContent();
+            if (isEncrypted((Element) usernameNode)) {
+                // If encrypted, decrypt the value
+                decryptedUsername = EncryptConfigsXml.decrypt(encryptedUsername, secretKey, ivParameterSpec);
+                System.out.println("Decrypted username: " + decryptedUsername);
+            } else {
+                // If not encrypted, return the clear-text value
+                decryptedUsername = encryptedUsername;
+                System.out.println("Username retrieved from config XML: " + decryptedUsername);
+            }
         }
         return decryptedUsername;
     }
@@ -97,15 +118,51 @@ public class ConfigManager {
         Node passwordNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
 
         String decryptedPassword = null;
-        if (isEncrypted((Element) passwordNode)) {
-            // If encrypted, decrypt the value
+        if (passwordNode != null) {
             String encryptedPassword = passwordNode.getTextContent();
-            decryptedPassword = EncryptConfigsXml.decrypt(encryptedPassword, secretKey, ivParameterSpec);
-        } else {
-            // If not encrypted, return the clear-text value
-            decryptedPassword = passwordNode.getTextContent();
+            if (isEncrypted((Element) passwordNode)) {
+                // If encrypted, decrypt the value
+                decryptedPassword = EncryptConfigsXml.decrypt(encryptedPassword, secretKey, ivParameterSpec);
+                System.out.println("Decrypted password: " + decryptedPassword);
+            } else {
+                // If not encrypted, return the clear-text value
+                decryptedPassword = encryptedPassword;
+                System.out.println("Password retrieved from config XML: " + decryptedPassword);
+            }
         }
         return decryptedPassword;
+    }
+
+    // Updating encrypted values in the config XML
+    public void updateConfig() throws XPathExpressionException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, IOException, TransformerException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+
+        updateEncryptedValue("/CONFIG/DB/USERNAME");
+        updateEncryptedValue("/CONFIG/DB/PASSWORD");
+        updateEncryptedValue("/CONFIG/DB/DATABASE_NAME");
+
+        writeChangesToFile();
+    }
+
+    private void updateEncryptedValue(String xpathExpression) throws XPathExpressionException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+        XPathExpression expr = xPath.compile(xpathExpression);
+        Node node = (Node) expr.evaluate(doc, XPathConstants.NODE);
+
+        if (node != null && !isEncrypted((Element) node)) {
+            String clearTextValue = node.getTextContent();
+            String encryptedValue = EncryptConfigsXml.encrypt(clearTextValue, secretKey, ivParameterSpec);
+            node.setTextContent(encryptedValue);
+            ((Element) node).setAttribute("TYPE", "ENCRYPTED");
+            System.out.println("Encrypted value updated for " + xpathExpression);
+        }
+    }
+    private void writeChangesToFile() throws TransformerException, IOException {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File("configs/config.xml"));
+        transformer.transform(source, result);
     }
 
     // Checking for the Encryption Status

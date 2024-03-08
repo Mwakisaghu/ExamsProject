@@ -20,6 +20,9 @@ public class Main {
             int intPort = Integer.parseInt(configManager.getUndertowPort());
             String BASE_URL = configManager.getBasePathUrl();
 
+            // updates config xml with encrypted values
+            configManager.updateConfig();
+
             PathHandler pathHandler = Handlers.path()
                     .addPrefixPath(BASE_URL + "/students", RoutesHandler.students())
                     .addPrefixPath(BASE_URL + "/teachers", RoutesHandler.teachers())
@@ -31,7 +34,6 @@ public class Main {
                     .addPrefixPath(BASE_URL + "/grades", RoutesHandler.grades())
                     .addPrefixPath(BASE_URL + "/multiple_choices", RoutesHandler.multiple_choices())
                     .addPrefixPath(BASE_URL + "/class_tiers", RoutesHandler.class_tiers());
-
 
             Undertow server = Undertow.builder()
                     .setServerOption(UndertowOptions.DECODE_URL, true)

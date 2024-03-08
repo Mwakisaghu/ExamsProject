@@ -40,10 +40,12 @@ public class QueryManager {
             connection = DriverManager.getConnection(connectionUrl, username, password);
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException | TransformerException | InvalidKeyException | BadPaddingException |
-                 NoSuchAlgorithmException | IllegalBlockSizeException | NoSuchPaddingException |
-                 XPathExpressionException e) {
+        } catch (
+                XPathExpressionException e) {
             // Handle exceptions related to database configuration
+            throw new RuntimeException(e);
+        } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException |
+                 BadPaddingException | InvalidKeyException | TransformerException e) {
             throw new RuntimeException(e);
         }
         return connection;

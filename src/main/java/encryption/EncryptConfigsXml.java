@@ -10,32 +10,27 @@ import java.util.Base64;
 
 public class EncryptConfigsXml {
     private static SecretKey secretKey;
-    @SuppressWarnings("unused")
     private static IvParameterSpec ivParameterSpec;
 
-    public EncryptConfigsXml() throws NoSuchAlgorithmException {
-        // Initialize the secretKey and ivParameterSpec
-        secretKey = generateSecretKey();
-        ivParameterSpec = generateIvParameterSpec();
-    }
-
-    public static SecretKey generateSecretKey() throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        keyGenerator.init(256, new SecureRandom());
-        secretKey = keyGenerator.generateKey();
+    public static SecretKey getSecretKey() {
         return secretKey;
     }
 
-    public static IvParameterSpec generateIvParameterSpec() {
-        byte[] iv = new byte[16];
-        new SecureRandom().nextBytes(iv);
-        return new IvParameterSpec(iv);
+    public static void setSecretKey(SecretKey secretKey) {
+        EncryptConfigsXml.secretKey = secretKey;
+    }
+
+    public static IvParameterSpec getIvParameterSpec() {
+        return ivParameterSpec;
+    }
+
+    public static void setIvParameterSpec(IvParameterSpec ivParameterSpec) {
+        EncryptConfigsXml.ivParameterSpec = ivParameterSpec;
     }
 
     public static String encrypt(String data, SecretKey secretKey, IvParameterSpec ivParameterSpec)
             throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
 
@@ -48,7 +43,6 @@ public class EncryptConfigsXml {
     public static String decrypt(String encryptedData, SecretKey secretKey, IvParameterSpec ivParameterSpec)
             throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParameterSpec);
 
@@ -57,5 +51,17 @@ public class EncryptConfigsXml {
         byte[] decryptedData = cipher.doFinal(dataBytes);
 
         return new String(decryptedData);
+    }
+
+    public static SecretKey generateSecretKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(256, new SecureRandom());
+        return keyGenerator.generateKey();
+    }
+
+    public static IvParameterSpec generateIvParameterSpec() {
+        byte[] iv = new byte[16];
+        new SecureRandom().nextBytes(iv);
+        return new IvParameterSpec(iv);
     }
 }
