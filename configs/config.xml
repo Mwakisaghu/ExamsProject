@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<CONFIG>
+        
+    <DB>
+                
+        <DRIVER_CLASS>com.mysql.cj.jdbc.Driver</DRIVER_CLASS>
+                
+        <CONNECTION_URL>jdbc:mysql://localhost:3306/exams_db</CONNECTION_URL>
+                
+        <DATABASE_TYPE>MySQL</DATABASE_TYPE>
+                
+        <HOST>localhost</HOST>
+                
+        <PORT>3306</PORT>
+                
+        <DATABASE_NAME TYPE="ENCRYPTED">fHTIs95RRoWoLeZJa5Q47w==</DATABASE_NAME>
+                
+        <USERNAME TYPE="ENCRYPTED">8Iz7o++P91ENhfeOkx5soA==</USERNAME>
+                
+        <PASSWORD TYPE="ENCRYPTED">vuOr+h1C9CEQjjOY7kUvyw==</PASSWORD>
+            
+    </DB>
+        
+    <SERVER>
+                
+        <UNDERTOW_PORT>7080</UNDERTOW_PORT>
+                
+        <UNDERTOW_HOST>localhost</UNDERTOW_HOST>
+            
+    </SERVER>
+        
+    <API>
+                
+        <BASE_PATH>/api</BASE_PATH>
+            
+    </API>
+    
+</CONFIG>
