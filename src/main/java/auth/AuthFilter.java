@@ -1,0 +1,60 @@
+package auth;
+
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HttpString;
+
+public class AuthFilter {
+    public HttpHandler doFilter(HttpHandler next) {
+        return exchange -> {
+            // Extracting token from request headers & params
+            String token = extractToken(exchange);
+
+            // Token validation
+            if (TokenManager.validateToken(token)) {
+                // If Token is valid - check if it should be refreshed
+                if (shouldRefreshToken(token)) {
+                    // Refresh the token
+                    String refreshedToken = TokenManager.refreshToken(token);
+
+                    // Updating the token in req / res - when needed
+                    updateToken(exchange, refreshedToken);
+                }
+
+                // Proceed with the req
+                next.handleRequest(exchange);
+            } else {
+                // Invalid Token - unauthorized
+                exchange.setStatusCode(401);
+                exchange.getResponseSender().send("Unauthorized!!");
+            }
+        };
+    }
+
+    private String extractToken(HttpServerExchange exchange) {
+        // Extracting token from req headers & params
+        return exchange.getRequestHeaders().getFirst("Authorization");
+    }
+
+    private boolean shouldRefreshToken(String token) {
+        // Get token info from token manager class
+        TokenManager.TokenInfo tokenInfo = TokenManager.getTokenInfo(token);
+        if (tokenInfo != null) {
+            // Retrieving the already defined validity in token manager
+            long tokenValidityDuration = TokenManager.getTokenValidityDuration();
+
+            // calculating the remaining validity time of the token
+            long remainingValidTime = tokenInfo.getExpirationTime() - System.currentTimeMillis();
+
+            // Checking if remaining valid time is less than already defined valid time
+            return remainingValidTime < tokenValidityDuration;
+        }
+        // Expired Token / Not Found
+        return false;
+    }
+
+    private void updateToken(HttpServerExchange exchange, String token) {
+        // Token update - req headers
+        exchange.getRequestHeaders().put(HttpString.tryFromString("Authorization"), token);
+    }
+}

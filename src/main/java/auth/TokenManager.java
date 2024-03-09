@@ -37,8 +37,18 @@ public class TokenManager {
         }
     }
 
-    // Storing Token Information
-    private static class TokenInfo {
+    // Getting Token valid duration
+    public static  long getTokenValidityDuration() {
+        return TOKEN_VALIDITY_DURATION;
+    }
+
+    // Getting TokenInfo
+    public static  TokenInfo getTokenInfo(String token) {
+        return  tokenMap.get(token);
+    }
+
+    // Storing Token Information - Token Info
+    public static class TokenInfo {
         private String username;
         private long expirationTime;
 
