@@ -1,5 +1,6 @@
 package org.example;
 
+import auth.AuthFilter;
 import data.ConfigManager;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -23,17 +24,20 @@ public class Main {
             // updates config xml with encrypted values
             configManager.updateConfig();
 
+            // Initialising the auth filter
+            AuthFilter authFilter = new AuthFilter();
+
             PathHandler pathHandler = Handlers.path()
-                    .addPrefixPath(BASE_URL + "/students", RoutesHandler.students())
-                    .addPrefixPath(BASE_URL + "/teachers", RoutesHandler.teachers())
-                    .addPrefixPath(BASE_URL + "/subjects", RoutesHandler.subjects())
-                    .addPrefixPath(BASE_URL + "/exams", RoutesHandler.exams())
-                    .addPrefixPath(BASE_URL + "/guardians", RoutesHandler.guardians())
-                    .addPrefixPath(BASE_URL + "/questions", RoutesHandler.questions())
-                    .addPrefixPath(BASE_URL + "/answers", RoutesHandler.answers())
-                    .addPrefixPath(BASE_URL + "/grades", RoutesHandler.grades())
-                    .addPrefixPath(BASE_URL + "/multiple_choices", RoutesHandler.multiple_choices())
-                    .addPrefixPath(BASE_URL + "/class_tiers", RoutesHandler.class_tiers());
+                    .addPrefixPath(BASE_URL + "/students", authFilter.doFilter(RoutesHandler.students()))
+                    .addPrefixPath(BASE_URL + "/teachers", authFilter.doFilter(RoutesHandler.teachers()))
+                    .addPrefixPath(BASE_URL + "/subjects", authFilter.doFilter(RoutesHandler.subjects()))
+                    .addPrefixPath(BASE_URL + "/exams", authFilter.doFilter(RoutesHandler.exams()))
+                    .addPrefixPath(BASE_URL + "/guardians", authFilter.doFilter(RoutesHandler.guardians()))
+                    .addPrefixPath(BASE_URL + "/questions", authFilter.doFilter(RoutesHandler.questions()))
+                    .addPrefixPath(BASE_URL + "/answers", authFilter.doFilter(RoutesHandler.answers()))
+                    .addPrefixPath(BASE_URL + "/grades", authFilter.doFilter(RoutesHandler.grades()))
+                    .addPrefixPath(BASE_URL + "/multiple_choices", authFilter.doFilter(RoutesHandler.multiple_choices()))
+                    .addPrefixPath(BASE_URL + "/class_tiers", authFilter.doFilter(RoutesHandler.class_tiers()));
 
             Undertow server = Undertow.builder()
                     .setServerOption(UndertowOptions.DECODE_URL, true)
