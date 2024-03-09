@@ -38,6 +38,10 @@ public class UserAccountsManager {
             } else {
                 // Resets the attempts on successful login
                 attempts.remove(username);
+
+                // Generate token on successfully auth
+                String token = TokenManager.generateToken(username);
+                System.out.println("Token generated for user: " + username + " - " + token);
             }
             return authenticated;
 
@@ -45,5 +49,13 @@ public class UserAccountsManager {
             e.printStackTrace();
             return  false;
         }
+    }
+
+    public  static  boolean validateToken (String token) {
+        return  TokenManager.validateToken(token);
+    }
+
+    public  static  String refreshToken (String token) {
+        return TokenManager.refreshToken(token);
     }
 }
