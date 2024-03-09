@@ -15,4 +15,18 @@ public class TokeManager {
         tokenMap.put(token, tokeniInfo);
         return  token;
     }
+
+    // Token validation
+    public static boolean validateToken(String token) {
+        Token tokenInfo = tokenMap.get(token);
+        if(tokenInfo != null && tokenInfo.getExpirationTime() > System.currentTimeMillis()) {
+            // Ensures token is valid
+            return true;
+        } else {
+            // Removing the expired token
+            tokenMap.remove((token));
+            // If token is invalid
+            return  false;
+        }
+    }
 }
