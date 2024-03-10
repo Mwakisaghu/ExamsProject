@@ -38,13 +38,13 @@ public class TokenManager {
     }
 
     // Getting Token valid duration
-    public static  long getTokenValidityDuration() {
+    public static long getTokenValidityDuration() {
         return TOKEN_VALIDITY_DURATION;
     }
 
     // Getting TokenInfo
-    public static  TokenInfo getTokenInfo(String token) {
-        return  tokenMap.get(token);
+    public static TokenInfo getTokenInfo(String token) {
+        return tokenMap.get(token);
     }
 
     // Storing Token Information - Token Info
