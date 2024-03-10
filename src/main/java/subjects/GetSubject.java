@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,14 +31,38 @@ public class GetSubject implements HttpHandler {
             int subjectId = Integer.parseInt(strSubjectId);
 
             // Sql query to retrieve a subjects data
-            String selectSql = "SELECT * FROM subjects WHERE subject_id = ?";
+            StringBuilder selectSql = new StringBuilder("SELECT * FROM subjects WHERE subject_id = ?");
 
             // Creating a param map object
             HashMap<Integer, Object> selectMap = new LinkedHashMap<>();
             selectMap.put(1, subjectId);
 
+            // Sorting & filtering
+            Deque<String> sortByParams = exchange.getQueryParameters().get("sort");
+            String sortBy = sortByParams != null ? sortByParams.getFirst() : "";
+
+            Deque<String> filterParams = exchange.getQueryParameters().get("filter");
+            String filter = filterParams != null ? filterParams.getFirst() : "";
+
+            // Applying sorting
+            if (!sortBy.isEmpty()) {
+                selectSql.append(" ORDER BY ").append(sortBy);
+            }
+
+            // Applying filtering
+            if (!filter.isEmpty()) {
+                // Appending the where clause - if the 1st filter criteria
+                if(!selectSql.toString().contains("WHERE")) {
+                    selectSql.append(" WHERE ");
+                } else  {
+                    // Appending AND
+                    selectSql.append(" AND ");
+                }
+                selectSql.append(filter);
+            }
+
             //Executing the query using the Query Manager
-            List<LinkedHashMap<String, Object>> subjectList = QueryManager.executeSelectQuery(selectSql,selectMap);
+            List<LinkedHashMap<String, Object>> subjectList = QueryManager.executeSelectQuery(selectSql.toString(),selectMap);
 
             //
             if (!subjectList.isEmpty()) {
