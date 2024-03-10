@@ -21,14 +21,26 @@ public class AuthFilter {
                     updateToken(exchange, refreshedToken);
                 }
 
-                // Proceed with the req
-                next.handleRequest(exchange);
+                // Authentication check
+                if (authReq(exchange)) {
+                    // continue if auth is a success
+                    next.handleRequest(exchange);
+                }
             } else {
                 // Invalid Token - unauthorized
                 exchange.setStatusCode(401);
                 exchange.getResponseSender().send("Unauthorized!!");
             }
         };
+    }
+
+    private boolean authReq(HttpServerExchange exchange) {
+        // Extracting username and pass from request
+        String username = exchange.getRequestHeaders().getFirst("username");
+        String password = exchange.getRequestHeaders().getFirst("password");
+
+        // Authenticate user
+        return UserAccountsManager.authenticate(username, password);
     }
 
     private String extractToken(HttpServerExchange exchange) {

@@ -6,56 +6,66 @@ import java.util.HashMap;
 
 public class UserAccountsManager {
     private static final int MAX_ATTEMPTS = 3;
-    private static  final  long LOCKOUT_TIME = 240000;
-    private static HashMap<String, Integer> attempts = new HashMap<>();
-    private static HashMap<String, Long> lockout = new HashMap<>();
+    private static final long LOCKOUT_TIME = 240000;
+    private static final HashMap<String, Integer> attempts = new HashMap<>();
+    private static final HashMap<String, Long> lockout = new HashMap<>();
 
     public static boolean authenticate(String username, String password) {
         try {
+            // Retrieve username and password from the configuration file
             ConfigManager configManager = new ConfigManager();
-            String retrievedUsername = configManager.getUsername();
-            String retrievedPassword = configManager.getPassword();
+            String storedUsername = configManager.getUsername();
+            String storedPassword = configManager.getPassword();
 
-            // checking if the user is already locked out
-            if (lockout.containsKey(username) && lockout.get(username) >System.currentTimeMillis()) {
+            // Checking if the user is already locked out
+            if (isUserLockedOut(username)) {
                 return false;
             }
 
-            // Checking if the user has already exceeded maximum login attempts
-            if (attempts.containsKey(username) && attempts.get(username) >= MAX_ATTEMPTS) {
-                lockout.put(username, System.currentTimeMillis() + LOCKOUT_TIME);
-                attempts.remove(username);
-                // returns if user is locked out
+            // Checking if the user has exceeded maximum login attempts
+            if (hasExceededMaxAttempts(username)) {
+                lockoutUser(username);
+                // User is locked out
                 return false;
             }
 
-            // Checking if username and password match ones in config.xml
-            boolean authenticated = username.equals(retrievedUsername) && password.equals(retrievedPassword);
+            // Authenticate user
+            boolean authenticated = storedUsername.equals(username) && storedPassword.equals(password);
 
-            // updating the attempts count
-            if (!authenticated) {
-                attempts.put(username, attempts.getOrDefault(username, 0) +1);
-            } else {
-                // Resets the attempts on successful login
-                attempts.remove(username);
-
-                // Generate token on successfully auth
-                String token = TokenManager.generateToken(username);
+            // Updating attempts count & generating token on successful authentication
+            if (authenticated) {
+                resetLoginAttempts(username);
+                String token = TokenManager.generateToken(username); // Pass the username here
                 System.out.println("Token generated for user: " + username + " - " + token);
+            } else {
+                incrementLoginAttempts(username);
             }
-            return authenticated;
 
+            return authenticated;
         } catch (Exception e) {
             e.printStackTrace();
-            return  false;
+            return false;
         }
     }
 
-    public  static  boolean validateToken (String token) {
-        return  TokenManager.validateToken(token);
+    private static boolean isUserLockedOut(String username) {
+        return lockout.containsKey(username) && lockout.get(username) > System.currentTimeMillis();
     }
 
-    public  static  String refreshToken (String token) {
-        return TokenManager.refreshToken(token);
+    private static boolean hasExceededMaxAttempts(String username) {
+        return attempts.containsKey(username) && attempts.get(username) >= MAX_ATTEMPTS;
+    }
+
+    private static void lockoutUser(String username) {
+        lockout.put(username, System.currentTimeMillis() + LOCKOUT_TIME);
+        attempts.remove(username);
+    }
+
+    private static void resetLoginAttempts(String username) {
+        attempts.remove(username);
+    }
+
+    private static void incrementLoginAttempts(String username) {
+        attempts.put(username, attempts.getOrDefault(username, 0) + 1);
     }
 }
