@@ -4,6 +4,8 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
+import java.util.Map;
+
 public class StatusResponses {
 
     // Utility method - send a success response
@@ -30,5 +32,11 @@ public class StatusResponses {
         exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
         exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
         exchange.getResponseSender().send(errorMessage);
+    }
+
+    public static void sendJsonResponse(HttpServerExchange exchange, int statusCode, String response) {
+        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+        exchange.setStatusCode(statusCode);
+        exchange.getResponseSender().send(response);
     }
 }

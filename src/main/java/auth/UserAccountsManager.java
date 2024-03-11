@@ -86,4 +86,14 @@ public class UserAccountsManager {
     private static void incrementLoginAttempts(String username) {
         attempts.put(username, attempts.getOrDefault(username, 0) + 1);
     }
+
+    public static Map<String, String> getUserCredentials(String username) {
+        try {
+            ConfigManager configManager = new ConfigManager();
+            return configManager.getUserCredentials(username);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
