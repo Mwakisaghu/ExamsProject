@@ -3,6 +3,7 @@ package auth;
 import data.ConfigManager;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class UserAccountsManager {
     private static final int MAX_ATTEMPTS = 3;
@@ -14,8 +15,14 @@ public class UserAccountsManager {
         try {
             // Retrieve username and password from the configuration file
             ConfigManager configManager = new ConfigManager();
-            String storedUsername = configManager.getUsername();
-            String storedPassword = configManager.getPassword();
+            Map<String, String> credentials = configManager.getUserCredentials(username);
+
+            if (credentials == null) {
+                return false; // User not found
+            }
+
+            String storedUsername = credentials.get("username");
+            String storedPassword = credentials.get("password");
 
             // Checking if the user is already locked out
             if (isUserLockedOut(username)) {
@@ -42,6 +49,17 @@ public class UserAccountsManager {
             }
 
             return authenticated;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean register(String username, String password) {
+        try {
+            ConfigManager configManager = new ConfigManager();
+            configManager.registerUser(username, password);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
