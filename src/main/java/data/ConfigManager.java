@@ -15,6 +15,8 @@ import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConfigManager {
     private Document doc;
@@ -155,6 +157,68 @@ public class ConfigManager {
             System.out.println("Encrypted value updated for " + xpathExpression);
         }
     }
+
+    // Register a new user with encrypted credentials
+    public void registerUser(String username, String password) throws TransformerException, NoSuchPaddingException, NoSuchAlgorithmException, IOException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, InvalidAlgorithmParameterException, XPathExpressionException {
+        XPathExpression expr = xPath.compile("/CONFIG/USERS");
+        Node usersNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
+
+        Element userNode = doc.createElement("USER");
+
+        // Encrypt username and password
+        String encryptedUsername = EncryptConfigsXml.encrypt(username, secretKey, ivParameterSpec);
+        String encryptedPassword = EncryptConfigsXml.encrypt(password, secretKey, ivParameterSpec);
+
+        // Create username element
+        Element usernameNode = doc.createElement("USERNAME");
+        usernameNode.setAttribute("TYPE", "ENCRYPTED");
+        usernameNode.setTextContent(encryptedUsername);
+
+        // Create password element
+        Element passwordNode = doc.createElement("PASSWORD");
+        passwordNode.setAttribute("TYPE", "ENCRYPTED");
+        passwordNode.setTextContent(encryptedPassword);
+
+        // Append username and password elements to user node
+        userNode.appendChild(usernameNode);
+        userNode.appendChild(passwordNode);
+
+        // Append user node to users node
+        usersNode.appendChild(userNode);
+
+        // Write changes to the XML file
+        writeChangesToFile();
+    }
+
+    // Retrieve decrypted username and password for authentication
+    public Map<String, String> getUserCredentials(String username) throws XPathExpressionException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+        XPathExpression expr = xPath.compile("/CONFIG/USERS/USER[USERNAME='" + username + "']");
+        Node userNode = (Node) expr.evaluate(doc, XPathConstants.NODE);
+
+        if (userNode != null) {
+            NodeList childNodes = userNode.getChildNodes();
+            String decryptedUsername = null;
+            String decryptedPassword = null;
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node childNode = childNodes.item(i);
+                String nodeName = childNode.getNodeName();
+                String nodeValue = childNode.getTextContent();
+                if ("USERNAME".equals(nodeName)) {
+                    decryptedUsername = EncryptConfigsXml.decrypt(nodeValue, secretKey, ivParameterSpec);
+                } else if ("PASSWORD".equals(nodeName)) {
+                    decryptedPassword = EncryptConfigsXml.decrypt(nodeValue, secretKey, ivParameterSpec);
+                }
+            }
+            if (decryptedUsername != null && decryptedPassword != null) {
+                Map<String, String> credentials = new HashMap<>();
+                credentials.put("username", decryptedUsername);
+                credentials.put("password", decryptedPassword);
+                return credentials;
+            }
+        }
+        return null;
+    }
+
     private void writeChangesToFile() throws TransformerException, IOException {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
