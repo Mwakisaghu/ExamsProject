@@ -36,7 +36,7 @@ public class GetAnswer implements HttpHandler {
             StringBuilder selectQuery = new StringBuilder("SELECT * FROM answers WHERE answer_id = ?");
 
             // Creating a parameter map for the query
-            Map<Integer, Object> paramMap = new LinkedHashMap<>();
+            HashMap<Integer, Object> paramMap = new LinkedHashMap<>();
             paramMap.put(1, answerId);
 
             // Sorting & Filtering params from query string
@@ -54,9 +54,9 @@ public class GetAnswer implements HttpHandler {
             // Applying filtering
             if (!filter.isEmpty()) {
                 // Appending the where clause - if the 1st filter criteria
-                if(!selectQuery.toString().contains("WHERE")) {
+                if (!selectQuery.toString().contains("WHERE")) {
                     selectQuery.append(" WHERE ");
-                } else  {
+                } else {
                     // Appending AND
                     selectQuery.append(" AND ");
                 }
@@ -64,7 +64,7 @@ public class GetAnswer implements HttpHandler {
             }
 
             // Executing the SQL query using the QueryManager
-            List<LinkedHashMap<String, Object>>answerMap = QueryManager.executeSelectQuery(selectQuery.toString(), (HashMap<Integer, Object>) paramMap);
+            List<LinkedHashMap<String, Object>> answerMap = QueryManager.executeSelectQuery(selectQuery.toString(), paramMap);
 
             if (!answerMap.isEmpty()) {
                 // The query result is a list of rows, and each row is a LinkedHashMap
