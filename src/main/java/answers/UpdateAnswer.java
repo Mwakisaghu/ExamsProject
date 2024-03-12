@@ -38,10 +38,10 @@ public class UpdateAnswer implements HttpHandler {
             HashMap<String, Object> requestBodyMap = gson.fromJson(reqBody, HashMap.class);
 
             // Checking for the request body
-            if (requestBodyMap == null) {
-                StatusResponses.sendErrorResponse(exchange, "Error: Invalid request - RequestBody Map not found");
+            if (requestBodyMap == null || requestBodyMap.isEmpty()) {
+                StatusResponses.sendErrorResponse(exchange, "Error: Invalid request - RequestBody Map not found or empty");
             } else {
-                // Build the SQL update statement based on the fields in the request body
+                // Building SQL update - based on the fields in the request body
                 StringBuilder updateSqlBuilder = new StringBuilder("UPDATE answers SET");
                 Map<Integer, Object> updateMap = new HashMap<>();
                 int paramIndex = 1;
