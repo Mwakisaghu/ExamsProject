@@ -1,89 +1,119 @@
 package auth;
 
 import data.ConfigManager;
+import org.xml.sax.SAXException;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
 
-public class UserAccountsManager {
-    private static final int MAX_ATTEMPTS = 3;
-    private static final long LOCKOUT_TIME = 240000;
-    private static final HashMap<String, Integer> attempts = new HashMap<>();
-    private static final HashMap<String, Long> lockout = new HashMap<>();
+public class AuthManager {
+    private static final int MAX_LOGIN_ATTEMPTS = 3;
+    private static final long LOCKOUT_TIME = 5 * 60 * 1000;
 
-    public static boolean authenticate(String username, String password) {
-        try {
-            // Retrieve username and password from the configuration file
-            ConfigManager configManager = new ConfigManager();
-            Map<String, String> credentials = configManager.getUserCredentials(username);
+    public static String authenticateUser(String username, String password) throws ParserConfigurationException, IOException,
+            NoSuchAlgorithmException, XPathExpressionException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, TransformerException, SAXException {
+        ConfigManager configManager = new ConfigManager();
 
-            if (credentials == null) {
-                return false; // User not found
+        String dbUrl = configManager.getConnectionURL();
+        String dbUser = configManager.getUsername();
+        String dbPassword = configManager.getPassword();
+
+        if (TokenManager.isUserLocked(username)) {
+            // Account locked
+            return null;
+        }
+
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword)) {
+            // Check if the user exists and the password matches
+            String query = "SELECT id FROM users WHERE username = ? AND password = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, username);
+                statement.setString(2, password);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        // User authenticated, reset login attempts and return an access token
+                        resetLoginAttempts(conn, username);
+                        return TokenManager.generateToken(username);
+                    } else {
+                        // Invalid credentials, track login attempt
+                        trackLoginAttempt(conn, username);
+                    }
+                }
             }
-
-            String storedUsername = credentials.get("username");
-            String storedPassword = credentials.get("password");
-
-            // Checking if the user is already locked out
-            if (isUserLockedOut(username)) {
-                return false;
-            }
-
-            // Checking if the user has exceeded maximum login attempts
-            if (hasExceededMaxAttempts(username)) {
-                lockoutUser(username);
-                // User is locked out
-                return false;
-            }
-
-            // Authenticate user
-            boolean authenticated = storedUsername.equals(username) && storedPassword.equals(password);
-
-            // Updating attempts count & generating token on successful authentication
-            if (authenticated) {
-                resetLoginAttempts(username);
-                String token = TokenManager.generateToken(username); // Pass the username here
-                System.out.println("Token generated for user: " + username + " - " + token);
-            } else {
-                incrementLoginAttempts(username);
-            }
-
-            return authenticated;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+        }
+        return null;
+    }
+
+    private static void trackLoginAttempt(Connection conn, String username) {
+        incrementLoginAttempts(conn, username);
+        if (getLoginAttemptsCount(conn, username) >= MAX_LOGIN_ATTEMPTS) {
+            lockUserAccount(conn, username);
         }
     }
 
-    public static boolean register(String username, String password) {
+    private static int getLoginAttemptsCount(Connection conn, String username) {
         try {
-            ConfigManager configManager = new ConfigManager();
-            configManager.registerUser(username, password);
-            return true;
-        } catch (Exception e) {
+            String query = "SELECT COUNT(*) FROM login_attempts WHERE username = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, username);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+        }
+        return 0;
+    }
+
+    private static void incrementLoginAttempts(Connection conn, String username) {
+        try {
+            String query = "INSERT INTO login_attempts (username) VALUES (?)";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, username);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    private static boolean isUserLockedOut(String username) {
-        return lockout.containsKey(username) && lockout.get(username) > System.currentTimeMillis();
+    private static void resetLoginAttempts(Connection conn, String username) {
+        try {
+            String query = "DELETE FROM login_attempts WHERE username = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, username);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static boolean hasExceededMaxAttempts(String username) {
-        return attempts.containsKey(username) && attempts.get(username) >= MAX_ATTEMPTS;
-    }
-
-    private static void lockoutUser(String username) {
-        lockout.put(username, System.currentTimeMillis() + LOCKOUT_TIME);
-        attempts.remove(username);
-    }
-
-    private static void resetLoginAttempts(String username) {
-        attempts.remove(username);
-    }
-
-    private static void incrementLoginAttempts(String username) {
-        attempts.put(username, attempts.getOrDefault(username, 0) + 1);
+    private static void lockUserAccount(Connection conn, String username) {
+        try {
+            long lockedUntil = System.currentTimeMillis() + LOCKOUT_TIME;
+            String query = "UPDATE users SET is_locked = true, locked_until = ? WHERE username = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setLong(1, lockedUntil);
+                statement.setString(2, username);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

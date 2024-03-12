@@ -1,11 +1,12 @@
 package auth;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class TokenManager {
     private static final long TOKEN_VALIDITY_DURATION = 600000;
-    private static final HashMap<String, TokenInfo> tokenMap = new HashMap<>();
+    private static final Map<String, TokenInfo> tokenMap = new HashMap<>();
 
     // Token Generation
     public static String generateToken(String username) {
@@ -45,6 +46,11 @@ public class TokenManager {
     // Getting TokenInfo
     public static TokenInfo getTokenInfo(String token) {
         return tokenMap.get(token);
+    }
+
+    // Method to check if user is locked
+    public static boolean isUserLocked(String username) {
+        return false;
     }
 
     // Storing Token Information - Token Info

@@ -3,6 +3,18 @@ package auth;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
+import org.xml.sax.SAXException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public class AuthFilter {
     public HttpHandler doFilter(HttpHandler next) {
@@ -17,7 +29,7 @@ public class AuthFilter {
                     // Refresh the token
                     String refreshedToken = TokenManager.refreshToken(token);
 
-                    // Updating the token in req / res - when needed
+                    // Updating the token in req/res - when needed
                     updateToken(exchange, refreshedToken);
                 }
 
@@ -34,13 +46,16 @@ public class AuthFilter {
         };
     }
 
-    private boolean authReq(HttpServerExchange exchange) {
-        // Extracting username and pass from request
+    private boolean authReq(HttpServerExchange exchange) throws InvalidAlgorithmParameterException, XPathExpressionException, NoSuchPaddingException, IllegalBlockSizeException, ParserConfigurationException, IOException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, TransformerException, SAXException {
+        // Extracting username and password from request
         String username = exchange.getRequestHeaders().getFirst("username");
         String password = exchange.getRequestHeaders().getFirst("password");
 
-        // Authenticate user
-        return UserAccountsManager.authenticate(username, password);
+        // Authenticating user
+        String authToken = AuthManager.authenticateUser(username, password);
+
+        // Checking if authentication was successful
+        return authToken != null && !authToken.isEmpty();
     }
 
     private String extractToken(HttpServerExchange exchange) {
