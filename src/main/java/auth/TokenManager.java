@@ -8,7 +8,6 @@ public class TokenManager {
     private static final long TOKEN_VALIDITY_DURATION = 600000;
     private static final Map<String, TokenInfo> tokenMap = new HashMap<>();
 
-    // Token Generation
     public static String generateToken(String username) {
         String token = UUID.randomUUID().toString();
         long expirationTime = System.currentTimeMillis() + TOKEN_VALIDITY_DURATION;
@@ -17,43 +16,30 @@ public class TokenManager {
         return token;
     }
 
-    // Token validation
     public static boolean validateToken(String token) {
         TokenInfo tokenInfo = tokenMap.get(token);
         return tokenInfo != null && tokenInfo.getExpirationTime() > System.currentTimeMillis();
     }
 
-    // Refresh token
     public static String refreshToken(String token) {
         TokenInfo tokenInfo = tokenMap.get(token);
         if (tokenInfo != null && tokenInfo.getExpirationTime() > System.currentTimeMillis()) {
-            // Extending the token validity
             tokenInfo.setExpirationTime(System.currentTimeMillis() + TOKEN_VALIDITY_DURATION);
             return token;
         } else {
-            // removing the expired token
             tokenMap.remove(token);
-            // Invalid Token
             return null;
         }
     }
 
-    // Getting Token valid duration
-    public static long getTokenValidityDuration() {
-        return TOKEN_VALIDITY_DURATION;
-    }
-
-    // Getting TokenInfo
     public static TokenInfo getTokenInfo(String token) {
         return tokenMap.get(token);
     }
 
-    // Method to check if user is locked
-    public static boolean isUserLocked(String username) {
-        return false;
+    public static long getTokenValidityDuration() {
+        return TOKEN_VALIDITY_DURATION;
     }
 
-    // Storing Token Information - Token Info
     public static class TokenInfo {
         private String username;
         private long expirationTime;
